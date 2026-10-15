@@ -1,0 +1,10 @@
+# Hostinger: la página siempre se revisa al abrirla; las imágenes se guardan una semana en el navegador
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|css)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  <FilesMatch "\.(webp|png|jpg|svg|mp4)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+</IfModule>
+AddType image/webp .webp
