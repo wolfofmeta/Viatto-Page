@@ -658,9 +658,6 @@
         aspect-ratio: 1; /* reserva el espacio aunque la animación aún no haya cargado */
       }
       /* cada animación se muestra solo cuando ya cargó: nunca se ve el ícono de imagen rota */
-      #fish2Crab:not(.is-ready) { visibility: hidden; }
-      /* el cangrejo y su globo no asoman hasta que la animación esté lista */
-      #fish2:not(.has-crab) { visibility: hidden; }
       /* bucle de gestos (tenazas arriba, riendo): reemplaza al video cuando termina de romper el letrero */
       .fish2__gesto {
         position: absolute;
@@ -1125,7 +1122,7 @@
             <button type="button" class="crab__close" id="fish2Close" aria-label="Cerrar mensaje">×</button>
             <p>¿Tours con el precio a la vista? ¿Y yo de qué vivo?</p>
           </div>
-          <span class="fish2__stack" role="img" aria-label="El cangrejo rompe el letrero de 100 mil"><img class="fish2__crab" id="fish2Crab" alt="" /><img class="fish2__crab fish2__gesto" id="fish2Gesto" alt="" /></span>
+          <span class="fish2__stack" role="img" aria-label="El cangrejo rompe el letrero de 100 mil"><img class="fish2__crab" id="fish2Crab" src="assets/cangrejo-letrero.webp?v=4" alt="" /><img class="fish2__crab fish2__gesto" id="fish2Gesto" src="assets/cangrejo-gesto.webp?v=3" alt="" /></span>
         </div>
         <div class="wrap feat">
           <div>
@@ -1310,7 +1307,6 @@
         return (window.__crabFiles ||= Promise.all(
           ["assets/cangrejo-letrero.webp?v=4", "assets/cangrejo-gesto.webp?v=3"].map((u) => fetch(u).then((r) => r.blob())),
         ).then((files) => {
-          document.getElementById("fish2Gesto").src = URL.createObjectURL(files[1]);
           return files;
         }));
       }
