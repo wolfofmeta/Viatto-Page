@@ -1,0 +1,82 @@
+/* Propuesta 3 · ajustes solo para celular (pantallas de hasta 600 px).
+   Lo usan propuesta-3.html y propuesta-3b.html; la versión de escritorio no cambia. */
+@media (max-width: 600px) {
+  /* sticker de los 500 mil centrado entre el menú y el título, sin cortarse ni tapar el logo */
+  .st--500 { --w: 128px; left: calc(50% - 64px); top: 92px; --r: -8deg; }
+  .st--lancha { display: none; }
+  /* ciudad amurallada abajo a la izquierda, en el lugar de la lancha */
+  .st--torre { display: block; --w: 96px; left: 4%; bottom: 5%; }
+  .sky__in > .pill { display: none; } /* en celular basta el botón del menú */
+  .sky p { font-size: 1rem; line-height: 1.45; margin: 20px auto 26px; }
+  .sky { --fw: 118px; } /* mojarra en la silla más pequeña */
+  /* sin alto de pantalla completa: la portada termina justo bajo la mojarra, sin hueco entre el texto y ella */
+  .sky { padding-top: 215px; padding-bottom: calc(var(--fw) * 1.25 + 64px); min-height: 0; place-items: start center; }
+  .sea { padding-bottom: 32px; }
+  /* cangrejo: abajo a la izquierda, junto a las flechas, sin tapar el celular */
+  #fish2 { --size: 130px; bottom: 0; transform: translateY(108%); }
+  #fish2.is-up { transform: none; }
+  #fish2 .crab__bubble { left: 40%; bottom: calc(100% - 10px); }
+  .half { padding-top: 24px; padding-bottom: 28px; }
+  .half__kicker { display: none; } /* sin el botón "¿Cómo se paga tu viaje?" */
+  .join { padding-top: 32px; } /* "Cartagena te espera" sube, sin el hueco blanco */
+  /* etiqueta de la propuesta más pequeña para que no tape el contenido */
+  .p3-note { padding: 6px 12px; font-size: 0.7rem; bottom: 8px; }
+  /* sección 3: el pez arriba de los 50 %, sin montarse sobre ellos */
+  .half__pez { margin-top: -40px; margin-bottom: 8px; }
+  /* Sección 2 como slider: debajo del título solo se ve el paso activo, y justo debajo su pantalla.
+     Las flechas (o deslizar el celular) cambian de paso y de pantalla a la vez. */
+  .feat { gap: 18px; }
+  .feat ul { margin-top: 22px; }
+  .feat ul::before { display: none; }
+  #featList li:not(.is-on) { display: none; }
+  #featList li.is-on { animation: paso-entra 0.35s ease; }
+  /* tarjeta del paso más compacta */
+  #featList li.is-on { padding: 14px 16px; gap: 14px; grid-template-columns: 44px minmax(0, 1fr); }
+  #featList li i { width: 44px; height: 44px; font-size: 1.3rem; }
+  #featList li b { font-size: 1.15rem; line-height: 1; }
+  #featList li span { margin-top: 5px; font-size: 0.88rem; line-height: 1.3; }
+  @keyframes paso-entra {
+    from { opacity: 0; translate: 24px 0; }
+    to { opacity: 1; translate: 0 0; }
+  }
+  /* flechas del slider a los lados del celular, centradas en su altura */
+  .mock { position: relative; }
+  .mock__track figure { padding-inline: 52px; }
+  .mock__track img { width: min(260px, 100%); }
+  .mock__nav {
+    position: absolute;
+    inset: 50% 0 auto;
+    translate: 0 -50%;
+    justify-content: space-between;
+    margin: 0;
+    pointer-events: none;
+  }
+  .mock__nav button { pointer-events: auto; width: 46px; height: 46px; }
+  /* "5.000 millas" con el mismo lettering de "Cartagena" y "gana" (solo en celular) */
+  .join__mil {
+    display: inline-block;
+    font-family: "Shrikhand", "Archivo", serif;
+    font-stretch: normal;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 1.04em;
+    color: var(--ink);
+    transform: skewX(10deg);
+    -webkit-text-stroke: 0.1em #08e773;
+    paint-order: stroke fill;
+    filter: drop-shadow(0 10px 14px rgba(6, 42, 28, 0.22));
+  }
+  /* "gana 5.000 millas": un poco más grande y con contorno amarillo */
+  .join h2 .join__h2b .pay,
+  .join h2 .join__mil {
+    font-size: 1.18em;
+    -webkit-text-stroke: 0.1em #ffd400;
+  }
+  /* más aire entre líneas para que las letras con contorno no se monten unas sobre otras */
+  .join h2 .join__h2b { line-height: 1.3; margin-top: 0.35em; }
+  .join h2 .join__h2b .pay { margin: 0 0.06em; }
+  /* en celular dice "5K millas" en vez de "5.000 millas" */
+  .t-esc { display: none; }
+  .t-mov { display: inline; }
+}

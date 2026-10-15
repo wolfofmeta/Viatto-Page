@@ -1,0 +1,1524 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Viatto Pay · Es otro viaje</title>
+    <meta
+      name="description"
+      content="Viatto es la app para ahorrar tu viaje a Cartagena, financiar lo que falta y reservar con el precio claro."
+    />
+    <link rel="icon" href="assets/appicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,700..900&family=Shrikhand&family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* Propuesta 3: estructura y actitud de la referencia ugly.cash con los colores de Viatto */
+      /* Esta página no tiene cabecera fija: los enlaces del menú llevan cada sección justo al borde superior */
+      html {
+        scroll-padding-top: 0;
+      }
+      main > section {
+        scroll-margin-top: 0;
+      }
+      body {
+        background: #f7f9f6;
+      }
+      .big {
+        font-family: "Archivo", "Poppins", sans-serif;
+        font-stretch: 68%;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.01em;
+        line-height: 0.9;
+        color: var(--ink);
+      }
+      /* Botones tipo sticker: borde blanco grueso y sombra, derechos; al pasar el cursor suben */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px 34px;
+        border: 3px solid #fff;
+        border-radius: 999px;
+        background: var(--ink);
+        color: #fff;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 0 0 1.5px rgba(6, 42, 28, 0.22), 0 9px 16px rgba(6, 42, 28, 0.24);
+        transition: translate 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+      .pill:hover {
+        translate: 0 -3px;
+        background: #000;
+        box-shadow: 0 0 0 1.5px rgba(6, 42, 28, 0.22), 0 14px 22px rgba(6, 42, 28, 0.28);
+      }
+      .pill--lime {
+        background: var(--lime);
+        color: var(--ink);
+      }
+      .pill--lime:hover {
+        background: #6cf0ac;
+      }
+
+      /* Cabecera clara */
+      .top {
+        position: absolute;
+        inset: 0 0 auto 0;
+        z-index: 5;
+        padding: 22px 0;
+      }
+      .top__in {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+      .top nav {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        font-weight: 500;
+      }
+      .top nav a:not(.pill) {
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .top .pill {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+      }
+
+      /* Portada: cielo, nubes y stickers flotando */
+      .sky {
+        position: relative;
+        overflow: hidden;
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+        padding: 130px 0 90px;
+        text-align: center;
+        background:
+          radial-gradient(ellipse 38% 16% at 22% 72%, rgba(255, 255, 255, 0.9), transparent 70%),
+          radial-gradient(ellipse 30% 12% at 78% 30%, rgba(255, 255, 255, 0.85), transparent 70%),
+          radial-gradient(ellipse 46% 18% at 64% 88%, rgba(255, 255, 255, 0.9), transparent 70%),
+          linear-gradient(180deg, #8fe6bd 0%, #c9f4de 55%, #eefbf4 100%);
+      }
+      .sky {
+        --fw: clamp(140px, 18.5vw, 268px); /* ancho de la mojarra; su globo se ubica a partir de él */
+      }
+      /* Globo de diálogo de la mojarra */
+      /* Boca: recorte superpuesto con 3 aperturas × 30 fotogramas; el script elige cuál según la letra que va diciendo */
+      .sky__mouth {
+        position: absolute;
+        left: 27.273%; /* la mojarra ahora mira hacia la izquierda */
+        top: 14.085%;
+        width: 22.727%;
+        height: 21.127%;
+        background: url("assets/mojarra-silla-boca.webp?v=3") 0 0 / 3000% 300% no-repeat;
+        opacity: 0;
+      }
+      .sky__mouth.is-on {
+        opacity: 1;
+      }
+      /* Párpados: capa transparente con 2 niveles (a medias y cerrados) × 30 fotogramas; el script la muestra al parpadear */
+      .sky__eyes {
+        position: absolute;
+        left: 29.545%;
+        top: 8.048%;
+        width: 27.273%;
+        height: 14.085%;
+        background: url("assets/mojarra-silla-ojos.webp?v=1") 0 0 / 3000% 200% no-repeat;
+        opacity: 0;
+      }
+      .sky__eyes.is-on {
+        opacity: 1;
+      }
+      /* Burbujitas que le salen de la boca */
+      .bub {
+        position: absolute;
+        left: 33%;
+        top: 21%;
+        width: var(--s);
+        height: var(--s);
+        border-radius: 50%;
+        border: 1.5px solid rgba(255, 255, 255, 0.95);
+        background: rgba(255, 255, 255, 0.35);
+        opacity: 0;
+        animation: bub-rise var(--t) ease-out forwards;
+      }
+      @keyframes bub-rise {
+        0% {
+          opacity: 0;
+          transform: translate(0, 0) scale(0.4);
+        }
+        15% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(var(--dx), -130px) scale(1);
+        }
+      }
+      .sky__say {
+        min-height: calc(2.7em + 16px);
+        position: absolute;
+        z-index: 3;
+        right: calc(2% + var(--fw) * 0.3);
+        bottom: calc(var(--fw) * 1.13 + 4px); /* justo encima de la mojarra */
+        width: min(196px, calc(100vw - 32px));
+        margin: 0;
+        padding: 8px 26px 8px 11px;
+        border: 2px solid rgba(6, 42, 28, 0.55);
+        border-radius: 14px 14px 4px 14px;
+        background: rgba(255, 255, 255, 0.62);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        color: var(--ink);
+        font-size: 0.72rem;
+        font-weight: 500;
+        line-height: 1.35;
+        text-align: left;
+        box-shadow: 4px 5px 0 rgba(6, 42, 28, 0.3);
+        transition: opacity 0.35s ease, transform 0.35s ease;
+      }
+      .sky__say.is-out {
+        opacity: 0;
+        transform: translateY(6px) scale(0.96);
+      }
+      .sky__say button {
+        position: absolute;
+        top: 3px;
+        right: 6px;
+        padding: 2px 4px;
+        border: 0;
+        background: none;
+        color: inherit;
+        font-size: 1rem;
+        line-height: 1;
+        cursor: pointer;
+        opacity: 0.7;
+      }
+      .sky__say button:hover {
+        opacity: 1;
+      }
+      .sky__in {
+        position: relative;
+        z-index: 2;
+      }
+      .sky h1 {
+        font-size: clamp(3.2rem, 10.5vw, 9.6rem);
+        max-width: 9.5em;
+        margin-inline: auto;
+      }
+      /* "Pay" con letra gruesa y cursiva, en el estilo del letrero "No más mojarras a 500 mil" */
+      .sky h1 .pay,
+      .blk h2 .pay,
+      .join h2 .pay {
+        font-family: "Shrikhand", "Archivo", serif;
+        font-stretch: normal;
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 1.04em;
+        /* inclinada hacia la izquierda (la letra viene inclinada a la derecha), con contorno blanco de sticker y flotando como ellos */
+        display: inline-block;
+        margin: 0 0.1em 0 0.06em;
+        transform: skewX(24deg);
+        -webkit-text-stroke: 0.1em #08e773; /* verde de la V del logo */
+        paint-order: stroke fill;
+        filter: drop-shadow(0 10px 14px rgba(6, 42, 28, 0.22));
+        --r: -3deg;
+        rotate: var(--r);
+        animation: pay-float 6s ease-in-out infinite alternate;
+        animation-delay: -2.5s;
+      }
+      /* el mismo vaivén de los stickers, un poco más corto */
+      @keyframes pay-float {
+        0% {
+          translate: 0 0;
+          rotate: var(--r, 0deg);
+        }
+        50% {
+          translate: 5px -10px;
+          rotate: calc(var(--r, 0deg) + 3.5deg);
+        }
+        100% {
+          translate: -4px 5px;
+          rotate: calc(var(--r, 0deg) - 2.5deg);
+        }
+      }
+      .sky p {
+        margin: 26px auto 34px;
+        max-width: 32em;
+        font-size: 1.15rem;
+        color: var(--ink);
+      }
+      .sky small {
+        display: block;
+        margin-top: 16px;
+        font-size: 0.88rem;
+        color: rgba(6, 42, 28, 0.7);
+      }
+      .st {
+        position: absolute;
+        z-index: 1;
+        width: var(--w);
+        height: auto;
+        rotate: var(--r, 0deg);
+        filter: drop-shadow(0 12px 18px rgba(6, 42, 28, 0.22));
+        animation: st-float var(--t, 6s) ease-in-out infinite alternate;
+        animation-delay: var(--d, 0s);
+        pointer-events: none;
+      }
+      @keyframes st-float {
+        0% {
+          translate: 0 0;
+          rotate: var(--r, 0deg);
+        }
+        50% {
+          translate: 8px -16px;
+          rotate: calc(var(--r, 0deg) + 6deg);
+        }
+        100% {
+          translate: -6px 8px;
+          rotate: calc(var(--r, 0deg) - 4deg);
+        }
+      }
+      /* Stickers a la izquierda; a la derecha va la mojarra animada */
+      .st--500 { --w: clamp(120px, 17vw, 270px); left: 3%; top: 20%; --r: -12deg; --d: -2s; --t: 7s; }
+      .st--torre { --w: clamp(92px, 11vw, 168px); left: 3.5%; bottom: 3%; --r: -7deg; --d: -3.5s; --t: 7s; }
+      .st--lancha { --w: clamp(92px, 11.5vw, 180px); left: 17%; bottom: 7%; --r: -8deg; --d: -1.5s; }
+      /* Mojarra en su silla: foto fija animada, hoja de 6 × 5 fotogramas que el script recorre.
+         La versión anterior (busto del reel) sigue en assets/mojarra-anim.webp: 8 × 6, 48 fotogramas, proporción 300 / 341. */
+      /* Suelo de arena bajo la silla: mismo recuadro que la mojarra, por detrás, con los bordes desvanecidos */
+      .sky__ground {
+        position: absolute;
+        z-index: 1;
+        right: 2%;
+        bottom: 0;
+        width: var(--fw);
+        aspect-ratio: 440 / 497;
+        background: url("assets/mojarra-suelo.webp?v=1") 0 0 / 100% 100% no-repeat;
+        pointer-events: none;
+      }
+      .sky__fish {
+        position: absolute;
+        z-index: 1;
+        right: 2%;
+        bottom: 0;
+        width: var(--fw);
+        aspect-ratio: 440 / 497;
+        background: url("assets/mojarra-silla.webp?v=5") 0 0 / 600% 500% no-repeat;
+        filter: drop-shadow(0 12px 22px rgba(6, 42, 28, 0.25));
+        pointer-events: none;
+      }
+
+      /* Bloques */
+      .blk {
+        padding-block: clamp(72px, 9vw, 128px);
+      }
+      #como-funciona {
+        padding-top: clamp(40px, 4.6vw, 66px); /* margen superior más cerrado en la segunda sección */
+      }
+      /* Fondo de mar: foto aérea de las Islas del Rosario bajo un velo claro.
+         Arriba el velo es del mismo verde menta con que termina la portada, para que las dos secciones se unan;
+         hacia abajo se abre y deja ver más el turquesa. */
+      .sea {
+        position: relative;
+        overflow: hidden;
+        padding-bottom: clamp(96px, 10vw, 150px);
+        background: #dff5f1;
+      }
+      .plain {
+        background: #efefef;
+      }
+      .sea > .wrap {
+        position: relative;
+        z-index: 1;
+      }
+      .sea::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, #eefbf4 0%, rgba(238, 251, 244, 0.86) 16%, rgba(255, 255, 255, 0.62) 52%, rgba(255, 255, 255, 0.45) 60%, rgba(255, 255, 255, 0.85) 82%, #fff 96%),
+          url("assets/fondo-mar.webp?v=2") center 62% / cover no-repeat;
+        transform: scaleX(-1); /* volteada: la lancha queda del lado del teléfono, no bajo el texto */
+      }
+      .blk h2 .pay {
+        margin-left: 0.02em;
+        margin-top: 0.16em; /* un poco más abajo para que no pise la línea de arriba */
+        animation-delay: -1s;
+      }
+      .blk h2 {
+        font-size: clamp(2.4rem, 6.4vw, 5.6rem);
+      }
+      .feat {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        gap: 64px;
+        align-items: center;
+      }
+      /* Pasos apilados: número grande tipo sticker, título condensado y una línea que los une.
+         El paso activo es una tarjeta oscura con su descripción; los demás muestran solo número y título. */
+      /* columna de título y pasos un poco más a la derecha, despegada del borde */
+      .feat > div:first-child {
+        padding-left: clamp(0px, 4vw, 64px);
+      }
+      .feat ul {
+        position: relative;
+        list-style: none;
+        padding: 0;
+        margin: 40px 0 0;
+        display: grid;
+        gap: 8px;
+      }
+      .feat ul::before {
+        content: "";
+        position: absolute;
+        left: 43px;
+        top: 34px;
+        bottom: 34px;
+        width: 3px;
+        border-radius: 3px;
+        background: rgba(6, 42, 28, 0.16);
+      }
+      .feat li {
+        position: relative;
+        display: grid;
+        grid-template-columns: 54px minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+        padding: 10px 18px;
+        border-radius: 26px;
+        cursor: pointer;
+        transition: background 0.25s ease, color 0.25s ease, padding 0.25s ease, box-shadow 0.25s ease, rotate 0.25s ease;
+      }
+      .feat li:hover:not(.is-on) {
+        background: rgba(6, 42, 28, 0.05);
+      }
+      .feat li i {
+        width: 54px;
+        height: 54px;
+        display: grid;
+        place-items: center;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        background: #eaf6ef;
+        color: var(--ink);
+        font-family: "Archivo", sans-serif;
+        font-stretch: 68%;
+        font-weight: 900;
+        font-style: normal;
+        font-size: 1.6rem;
+        line-height: 1;
+        box-shadow: 0 0 0 1.5px rgba(6, 42, 28, 0.22), 0 7px 12px rgba(6, 42, 28, 0.2);
+        transition: background 0.25s ease, scale 0.25s ease;
+      }
+      .feat li b {
+        display: block;
+        font-family: "Archivo", sans-serif;
+        font-stretch: 68%;
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: clamp(1.35rem, 2.1vw, 1.85rem);
+        line-height: 1;
+      }
+      .feat li span {
+        display: none;
+        margin-top: 8px;
+        font-size: 1.02rem;
+        color: rgba(255, 255, 255, 0.82);
+      }
+      .feat li.is-on {
+        padding-block: 22px;
+        background: var(--ink);
+        color: #fff;
+        /* mismo efecto sticker del formulario: borde y sombra verde dura */
+        border: 3px solid var(--ink);
+        box-shadow: 8px 10px 0 #08e773;
+        rotate: -1deg;
+      }
+      .feat li.is-on i {
+        background: var(--lime);
+        scale: 1.08;
+      }
+      .feat li.is-on span {
+        display: block;
+      }
+      /* Carrusel de mockups: lo único que se mueve en la sección */
+      .mock {
+        min-width: 0;
+      }
+      .mock__track {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+      }
+      .mock__track::-webkit-scrollbar {
+        display: none;
+      }
+      .mock__track figure {
+        flex: 0 0 100%;
+        margin: 0;
+        padding: 30px 0 64px; /* sitio para que la sombra del teléfono no se corte */
+        display: grid;
+        place-items: center;
+        scroll-snap-align: center;
+      }
+      .mock__track img,
+      .mock__ph {
+        width: min(300px, 78%);
+        rotate: 4deg;
+      }
+      .mock__track img {
+        height: auto;
+        filter: drop-shadow(0 14px 22px rgba(6, 42, 28, 0.22));
+      }
+      /* Espacio con forma de teléfono para los mockups que faltan */
+      .mock__ph {
+        aspect-ratio: 615 / 1294;
+        border: 3px dashed rgba(6, 42, 28, 0.35);
+        border-radius: 46px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.82rem;
+        color: rgba(6, 42, 28, 0.55);
+      }
+      .mock__nav {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+      .mock__nav button {
+        width: 52px;
+        height: 52px;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        background: var(--ink);
+        color: #fff;
+        font-size: 1.3rem;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 0 0 1.5px rgba(6, 42, 28, 0.22), 0 9px 16px rgba(6, 42, 28, 0.24);
+        transition: translate 0.2s ease, opacity 0.2s ease;
+      }
+      .mock__nav button:hover:not(:disabled) {
+        translate: 0 -3px;
+      }
+      .mock__nav button:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+      .clear {
+        background: #efefef;
+        color: var(--ink);
+      }
+      .clear h2 {
+        color: var(--ink);
+        white-space: nowrap;
+        font-size: clamp(1.7rem, 4.6vw, 4.2rem);
+      }
+      .clear__h2b {
+        color: #08c464;
+      }
+      .clear__note {
+        display: block;
+        margin-top: 8px;
+        font-size: 0.82rem;
+        color: rgba(0, 0, 0, 0.5);
+      }
+      .clear__head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 24px;
+      }
+      .clear__pez {
+        width: clamp(170px, 22vw, 300px);
+        height: auto;
+        margin-top: -113px;
+        /* las monedas entran por arriba del video: se desvanecen en vez de verse cortadas */
+        -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
+        mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
+      }
+      @media (max-width: 720px) {
+        .clear__head { grid-template-columns: 1fr; }
+        .clear__pez { justify-self: center; margin-top: 0; width: 200px; }
+      }
+      .clear__head p {
+        margin-top: 18px;
+        font-size: 1.15rem;
+        color: rgba(0, 0, 0, 0.72);
+      }
+      .quad {
+        margin-top: 48px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .quad article {
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        background: #fff;
+        border-radius: 22px;
+        padding: 26px 28px;
+      }
+      .quad h3 {
+        font-size: 1.15rem;
+        color: var(--ink);
+        margin-bottom: 8px;
+      }
+      .quad p {
+        color: rgba(0, 0, 0, 0.7);
+      }
+      .shout {
+        background: var(--lime);
+        text-align: center;
+      }
+      .shout h2 {
+        font-size: clamp(3rem, 10vw, 9rem);
+      }
+      .shout p {
+        margin-top: 22px;
+        font-size: 1.2rem;
+      }
+      .more {
+        margin-top: 48px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+      .more a {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        min-height: 230px;
+        border-radius: 28px;
+        padding: 28px;
+        text-decoration: none;
+        color: #fff;
+        background: linear-gradient(180deg, rgba(6, 42, 28, 0.05), rgba(6, 42, 28, 0.88)), var(--img) center / cover;
+        transition: transform 0.25s ease;
+      }
+      .more a:hover {
+        transform: translateY(-4px);
+      }
+      .more b {
+        font-family: "Archivo", sans-serif;
+        font-stretch: 68%;
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: 1.7rem;
+        line-height: 1;
+      }
+      .more span {
+        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .join h2 {
+        color: #fff;
+        font-size: clamp(2.6rem, 6.4vw, 5.4rem);
+      }
+      /* Globo de la mojarra de la segunda sección: misma estructura del sitio, con el formato claro de esta propuesta */
+      #fish2 .crab__bubble {
+        border: 2px solid rgba(6, 42, 28, 0.55);
+        background: rgba(255, 255, 255, 0.62);
+        color: var(--ink);
+        font-weight: 500;
+        box-shadow: 4px 5px 0 rgba(6, 42, 28, 0.3);
+      }
+      /* Párpados de la mojarra de la segunda sección: capa con 2 niveles × 48 fotogramas, sobre los ojos */
+      /* Cangrejo de la segunda sección: esquina inferior izquierda */
+      #fish2 {
+        --size: clamp(150px, 17vw, 250px);
+        position: absolute; /* vive dentro de la sección 2: sube desde su borde inferior y no invade la siguiente */
+        z-index: 2;
+        bottom: 110px;
+        transform: translateY(calc(108% + 110px));
+      }
+      #fish2.is-up {
+        transform: none;
+      }
+      #fish2 .crab__bubble {
+        left: 30%;
+      }
+      .fish2__stack {
+        position: relative;
+        display: block;
+      }
+      /* bucle de gestos (tenazas arriba, riendo): reemplaza al video cuando termina de romper el letrero */
+      .fish2__gesto {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+      }
+      .fish2__stack.is-gesto .fish2__gesto { opacity: 1; }
+      .fish2__stack.is-gesto #fish2Crab { opacity: 0; }
+      .fish2__crab {
+        display: block;
+        width: 100%;
+        height: auto;
+        filter: drop-shadow(0 6px 10px rgba(4, 22, 15, 0.25));
+        /* en espejo: el borde donde el video corta las patas queda pegado al borde izquierdo de la pantalla */
+        transform: scaleX(-1);
+      }
+      .fish__eyes {
+        position: absolute;
+        left: 14%;
+        top: 33.724%;
+        width: 55.333%;
+        height: 18.475%;
+        background: url("assets/mojarra-anim-ojos.webp?v=1") 0 0 / 4800% 200% no-repeat;
+        opacity: 0;
+      }
+      .fish__eyes.is-on {
+        opacity: 1;
+      }
+      /* Coco con rastas: asoma por la esquina inferior derecha mientras se ve la sección "No somos un banco".
+         Hoja de 9 × 5 fotogramas (45, a 15 por segundo) que el script recorre. */
+      .coco {
+        position: fixed;
+        right: 12px;
+        bottom: 0;
+        z-index: 40;
+        width: clamp(118px, 13vw, 190px);
+        transform: translateY(110%);
+        transition: transform 0.7s cubic-bezier(0.3, 1.3, 0.5, 1);
+        pointer-events: none;
+      }
+      .coco.is-up {
+        transform: none;
+      }
+      /* Globo del coco: misma estructura y formato que el de la mojarra, abriendo hacia la izquierda */
+      .coco .crab__bubble {
+        left: auto;
+        right: 6px;
+        bottom: calc(100% + 2px);
+        border: 2px solid rgba(6, 42, 28, 0.55);
+        border-radius: 14px 14px 4px 14px;
+        background: rgba(255, 255, 255, 0.62);
+        color: var(--ink);
+        font-weight: 500;
+        box-shadow: 4px 5px 0 rgba(6, 42, 28, 0.3);
+        transform-origin: 85% 100%;
+        pointer-events: auto;
+      }
+      .coco.is-talking .crab__bubble {
+        opacity: 1;
+        transform: none;
+        visibility: visible;
+      }
+      .coco__sprite {
+        display: block;
+        aspect-ratio: 344 / 355;
+        background: url("assets/coco-anim.webp?v=1") 0 0 / 900% 500% no-repeat;
+        filter: drop-shadow(0 8px 12px rgba(6, 42, 28, 0.25));
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .coco {
+          transition: none;
+        }
+      }
+      .p3-note:hover {
+        translate: -50% -3px;
+      }
+      .p3-note {
+        position: fixed;
+        left: 50%;
+        bottom: 12px;
+        translate: -50% 0; /* centrado abajo: en las esquinas van las mojarras */
+        z-index: 50;
+        padding: 10px 18px;
+        font-size: 0.82rem;
+      }
+      .footer__in span {
+        display: block;
+        padding: 4px 0;
+      }
+      @media (max-width: 980px) {
+        .top nav a:not(.pill) {
+          display: none;
+        }
+        .more,
+        .quad,
+        .feat {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .st--torre {
+          display: none;
+        }
+        .st--500 { left: -4%; top: 9%; }
+        .st--lancha { left: 2%; bottom: 3%; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .st,
+        .pay {
+          animation: none;
+        }
+      }
+      /* Propuesta sección 3: lettering a todo lo ancho */
+      .half {
+        position: relative;
+        overflow-x: clip; /* las monedas pueden asomar sobre la sección de arriba sin cortarse */
+        overflow-y: visible;
+        /* mismo cielo difuminado de la portada */
+        background:
+          radial-gradient(ellipse 38% 16% at 22% 72%, rgba(255, 255, 255, 0.9), transparent 70%),
+          radial-gradient(ellipse 30% 12% at 78% 30%, rgba(255, 255, 255, 0.85), transparent 70%),
+          radial-gradient(ellipse 46% 18% at 64% 88%, rgba(255, 255, 255, 0.9), transparent 70%),
+          linear-gradient(180deg, #ffffff 0%, #eefbf4 18%, #c9f4de 45%, #a6ebc9 66%, #ffffff 100%); /* termina en blanco para unirse con la sección final */
+        padding: clamp(64px, 8vw, 120px) 16px clamp(56px, 7vw, 100px);
+        text-align: center;
+        color: var(--ink);
+      }
+      .half__kicker {
+        display: inline-block;
+        padding: 10px 22px;
+        border: 3px solid #fff;
+        border-radius: 999px;
+        background: var(--ink);
+        color: #fff;
+        font-family: "Archivo", sans-serif;
+        font-stretch: 68%;
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: clamp(1rem, 1.6vw, 1.35rem);
+        box-shadow: 0 8px 16px rgba(6, 42, 28, 0.2);
+      }
+      .half__stage {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: clamp(0px, 1vw, 16px);
+        max-width: 1500px;
+        margin: clamp(16px, 2vw, 32px) auto 0;
+      }
+      .half__side {
+        position: relative;
+        top: 96px; /* más abajo que el pez */
+        display: grid;
+        justify-items: center;
+        line-height: 0.82;
+        animation: pay-float 6s ease-in-out infinite alternate;
+      }
+      .half__side--tu { --r: -5deg; }
+      .half__side--vt { --r: 5deg; animation-delay: -3s; }
+      .half__pct {
+        font-family: "Archivo", sans-serif;
+        font-stretch: 62%;
+        font-weight: 900;
+        font-size: clamp(4.8rem, 13vw, 13rem);
+        letter-spacing: -0.02em;
+        -webkit-text-stroke: 0.06em #fff;
+        paint-order: stroke fill;
+        filter: drop-shadow(0 12px 18px rgba(6, 42, 28, 0.22));
+      }
+      .half__side--vt .half__pct { color: #08c464; }
+      .half__who {
+        margin-top: -0.12em;
+        font-family: "Shrikhand", "Archivo", serif;
+        font-size: clamp(3rem, 8vw, 7.5rem);
+        transform: skewX(24deg);
+        -webkit-text-stroke: 0.1em #08e773;
+        paint-order: stroke fill;
+        filter: drop-shadow(0 10px 14px rgba(6, 42, 28, 0.22));
+      }
+      .half__side--vt .half__who { -webkit-text-stroke-color: #fff; color: var(--ink); }
+      .half__what {
+        margin-top: 0.7em;
+        font-size: clamp(1rem, 1.5vw, 1.3rem);
+        line-height: 1.2;
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.62);
+      }
+      .half__pez {
+        width: clamp(200px, 28vw, 420px);
+        height: auto;
+        margin-top: -230px;
+        margin-bottom: -40px;
+        position: relative;
+        z-index: 1;
+        -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
+        mask-image: linear-gradient(180deg, transparent 0%, #000 22%);
+      }
+      .half__eq {
+        margin-top: clamp(40px, 9vw, 150px);
+        font-family: "Archivo", sans-serif;
+        font-stretch: 68%;
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: clamp(1.8rem, 4.4vw, 4rem);
+        line-height: 1;
+      }
+      .half__eq b {
+        display: inline-block;
+        padding: 0.08em 0.35em;
+        background: var(--lime);
+        border: 3px solid #fff;
+        border-radius: 0.3em;
+        box-shadow: 0 8px 16px rgba(6, 42, 28, 0.18);
+        rotate: 1.5deg;
+      }
+      .half__kicker { margin-top: 28px; }
+      /* "Tu viaje completo" como placa de carro tipo sticker */
+      .half__eq b.plate {
+        position: relative;
+        display: inline-grid;
+        justify-items: center;
+        padding: 0.2em 0.7em 0.14em;
+        border-radius: 0.22em;
+        outline: 0.05em solid var(--ink);
+        outline-offset: -0.2em;
+        letter-spacing: 0.04em;
+        /* contorno de sticker: blanco grueso, filo oscuro y sombra dura desplazada */
+        border: 0.12em solid #fff;
+        box-shadow: 0 0 0 3px var(--ink), 0.12em 0.16em 0 3px var(--ink), 0 18px 30px rgba(6, 42, 28, 0.25);
+        transform-origin: 50% 0;
+        animation: plate-swing 3.2s ease-in-out infinite;
+      }
+      .half__eq b.plate:hover { animation-duration: 0.9s; }
+      /* se mece como una placa colgada de sus tornillos */
+      @keyframes plate-swing {
+        0%, 100% { rotate: -3deg; translate: 0 0; }
+        25% { translate: 0 -4px; }
+        50% { rotate: 3deg; translate: 0 0; }
+        75% { translate: 0 -4px; }
+      }
+      .plate small {
+        margin-top: 0.12em;
+        font-size: 0.26em;
+        letter-spacing: 0.4em;
+        text-indent: 0.4em;
+      }
+      .plate::before,
+      .plate::after {
+        content: "";
+        position: absolute;
+        top: 0.3em;
+        width: 0.13em;
+        height: 0.13em;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #fff, #9aa 70%);
+        box-shadow: inset 0 0 0 1px rgba(6, 42, 28, 0.45);
+      }
+      .plate::before { left: 0.32em; }
+      .plate::after { right: 0.32em; }
+      .half__note {
+        display: block;
+        margin-top: 18px;
+        font-size: 0.82rem;
+        color: rgba(0, 0, 0, 0.5);
+      }
+      @media (max-width: 720px) {
+        .half__stage { grid-template-columns: 1fr 1fr; }
+        .half__side { top: 0; }
+        .half__pez { grid-column: 1 / -1; grid-row: 1; justify-self: center; width: 200px; }
+      }
+      .join__h2b {
+        display: block;
+        margin-top: 0.2em;
+        font-size: 0.55em;
+        color: var(--lime);
+      }
+      .join h2 .pay {
+        color: var(--ink);
+        animation: none;
+        transform: skewX(10deg); /* compensa la inclinación propia de la letra: queda derecha */
+        rotate: 0deg;
+      }
+      /* Avión de papel que cruza la sección del formulario */
+      .join {
+        position: relative;
+        overflow: hidden;
+      }
+      .join > .wrap {
+        position: relative;
+        z-index: 1;
+      }
+      /* el video del avión (sin fondo) ocupa todo el ancho: entra por la izquierda y sale por la derecha */
+      .avion {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        z-index: 2;
+        width: 100%;
+        height: auto;
+        translate: 0 -50%;
+        pointer-events: none;
+      }
+      /* Promo de millas */
+      .millas {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 22px;
+        max-width: 30em;
+        padding: 12px 18px 12px 12px;
+        border: 3px solid #fff;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.08);
+        rotate: -1.5deg;
+        transform-origin: 20% 50%;
+        animation: millas-wiggle 3.4s ease-in-out infinite;
+      }
+      /* la tarjeta flota y se mece como un sticker */
+      @keyframes millas-wiggle {
+        0%, 100% { rotate: -2.5deg; translate: 0 0; }
+        50% { rotate: 1.5deg; translate: 0 -6px; }
+      }
+      .millas b {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 74px;
+        height: 74px;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        background: #ffd400;
+        color: var(--ink);
+        font-family: "Archivo", sans-serif;
+        font-stretch: 68%;
+        font-weight: 900;
+        font-size: 1.8rem;
+        box-shadow: 0 8px 14px rgba(0, 0, 0, 0.3);
+        animation: millas-pop 2.4s ease-in-out infinite;
+      }
+      .millas strong { color: #ffd400; }
+      @keyframes millas-pop {
+        0%, 100% { rotate: -8deg; scale: 1; }
+        50% { rotate: 8deg; scale: 1.08; }
+      }
+      .btn-millas {
+        width: 100%;
+        margin-top: 6px;
+        padding: 18px 24px;
+        border: 3px solid #fff;
+        border-radius: 999px;
+        background: #ffd400;
+        color: var(--ink);
+        font-family: "Archivo", sans-serif;
+        font-stretch: 68%;
+        font-weight: 900;
+        font-size: 1.35rem;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: 0 0 0 3px var(--ink), 0 8px 0 3px #08e773, 0 18px 28px rgba(0, 0, 0, 0.35);
+        animation: millas-pulse 1.8s ease-in-out infinite;
+        transition: translate 0.15s ease, box-shadow 0.15s ease;
+      }
+      .btn-millas:hover { animation-play-state: paused; translate: 0 -3px; }
+      .btn-millas:active { translate: 0 5px; box-shadow: 0 0 0 3px var(--ink), 0 2px 0 3px #08e773; }
+      @keyframes millas-pulse {
+        0%, 100% { scale: 1; }
+        50% { scale: 1.04; }
+      }
+      .join__mail {
+        margin-top: 14px;
+        font-weight: 700;
+      }
+      /* Prueba: sección final en fondo blanco */
+      .join.section--dark {
+        background: #fff;
+        color: var(--ink);
+      }
+      .join h2 { color: var(--ink); }
+      .join__h2b { color: #08c464; }
+      .join .cta__sub { color: rgba(0, 0, 0, 0.7); }
+      .join .form {
+        border: 3px solid var(--ink);
+        box-shadow: 8px 10px 0 #08e773;
+      }
+      .millas {
+        border-color: var(--ink);
+        background: #f4fbf7;
+      }
+      .millas strong { color: #08a454; }
+      .avion { filter: drop-shadow(0 12px 10px rgba(6, 42, 28, 0.18)); }
+      /* Redes sociales en el pie: botones redondos tipo sticker */
+      .social {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+      .social a {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: var(--lime);
+        color: var(--ink);
+        box-shadow: 3px 4px 0 #08e773;
+        transition: translate 0.15s ease, rotate 0.15s ease;
+      }
+      .social a:hover {
+        translate: 0 -3px;
+        rotate: -8deg;
+      }
+      .social svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+      }
+    </style>
+    <style>.t-mov { display: none; }</style>
+    <link rel="stylesheet" href="propuesta-3-movil.css" />
+  </head>
+  <body>
+    <a class="skip" href="#contenido">Saltar al contenido</a>
+
+    <header class="top">
+      <div class="wrap top__in">
+        <a href="#inicio" aria-label="Viatto, inicio"><img src="assets/logo-color.png" alt="Viatto" width="168" height="55" /></a>
+        <nav aria-label="Principal">
+          <a href="#como-funciona">Cómo funciona</a>
+          <a href="#app">La app</a>
+          <a href="#claro">Ahorro y cuotas</a>
+          <a href="#unete">Operadores</a>
+          <a class="pill" href="#unete">Quiero la app</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="contenido">
+      <!-- Portada -->
+      <section class="sky" id="inicio">
+        <img class="st st--500" src="assets/sticker-no-mas-mojarras-amarillo.webp" alt="No más mojarras a 500 mil" />
+        <img class="st st--lancha" src="assets/sticker-lancha.webp" alt="" />
+        <img class="st st--torre" src="assets/sticker-torre.webp" alt="" />
+        <span class="sky__ground" aria-hidden="true"></span>
+        <span class="sky__fish" id="skyFish" role="img" aria-label="La mojarra a 500 mil"><span class="sky__mouth" id="skyMouth"></span><span class="sky__eyes" id="skyEyes"></span></span>
+        <div class="sky__say" id="skySay">
+          <button type="button" id="skySayClose" aria-label="Cerrar mensaje">×</button>
+          <span id="skySayText" aria-live="off"></span>
+        </div>
+        <div class="wrap sky__in">
+          <h1 class="big">Viatto <span class="pay">Pay</span><br />es otro viaje</h1>
+          <p>Viatto es la app para ahorrar tu viaje a Cartagena, financiar lo que falta y reservar con el precio claro.</p>
+          <a class="pill" href="#unete">Quiero la app</a>
+          <small>Muy pronto. Déjanos tu correo y te avisamos.</small>
+        </div>
+      </section>
+
+      <!-- Cómo funciona + la app: el texto queda fijo a la izquierda y a la derecha solo se desliza el carrusel de mockups -->
+      <section class="blk sea" id="como-funciona">
+        <!-- El cangrejo que rompe el letrero: asoma por la esquina inferior izquierda de su sección, sin pasar a la siguiente mientras se ve la segunda sección -->
+        <div class="fish" id="fish2">
+          <div class="crab__bubble">
+            <button type="button" class="crab__close" id="fish2Close" aria-label="Cerrar mensaje">×</button>
+            <p>¿Tours con el precio a la vista? ¿Y yo de qué vivo?</p>
+          </div>
+          <span class="fish2__stack"><img class="fish2__crab" id="fish2Crab" src="assets/cangrejo-letrero.webp?v=3" alt="El cangrejo rompe el letrero de 100 mil" /><img class="fish2__crab fish2__gesto" id="fish2Gesto" src="assets/cangrejo-gesto.webp?v=2" alt="" aria-hidden="true" /></span>
+        </div>
+        <div class="wrap feat">
+          <div>
+            <h2 class="big">Así funciona<br /><span class="pay">El Viaje</span></h2>
+            <ul id="featList">
+              <li class="is-on"><i>1</i><div><b>Descarga la app</b><span>Baja Viatto en tu celular.</span></div></li>
+              <li><i>2</i><div><b>Regístrate</b><span>Crea tu cuenta con tu correo, Google o Apple.</span></div></li>
+              <li><i>3</i><div><b>Explora los tours</b><span>Islas, tours y museos con el precio y lo que incluyen a la vista.</span></div></li>
+              <li><i>4</i><div><b>Paga</b><span>De contado o con el plan 50 % ahorro más cuotas.</span></div></li>
+              <li><i>5</i><div><b>Muestra tu QR</b><span>Tu voucher queda en la app. Lo muestras al operador el día del tour y listo.</span></div></li>
+            </ul>
+          </div>
+          <div class="mock" id="app">
+            <div class="mock__track" id="mockTrack" tabindex="0" aria-label="Pantallas de la app, desliza para ver más">
+              <figure><img src="assets/app-bienvenida.webp?v=8" alt="Pantalla de bienvenida de la app Viatto: Viatto es otro viaje" /></figure>
+              <figure><img src="assets/app-registro.webp?v=2" alt="Pantalla de registro de la app Viatto: Crea tu cuenta" loading="lazy" /></figure>
+              <figure><img src="assets/app-explorar.webp" alt="Pantalla Explorar Cartagena de la app Viatto, con el Tour 5 Islas a $320.000 y el Tour Bahía a $110.000 por persona" loading="lazy" /></figure>
+              <figure><img src="assets/app-pago-tour.webp" alt="Pantalla de pago de la app Viatto: Tour 5 Islas a $320.000 por persona con las formas de pago" loading="lazy" /></figure>
+              <figure><img src="assets/app-voucher.webp" alt="Voucher de la app Viatto: reserva confirmada del Tour 5 Islas con su código QR" loading="lazy" /></figure>
+            </div>
+            <div class="mock__nav">
+              <button type="button" id="mockPrev" aria-label="Pantalla anterior">←</button>
+              <button type="button" id="mockNext" aria-label="Pantalla siguiente">→</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Claridad -->
+      <!-- Propuesta: lettering 50 % / 50 % a todo lo ancho con el pez globo en el centro -->
+      <section class="half" id="claro">
+        <div class="half__stage">
+          <div class="half__side half__side--tu">
+            <span class="half__pct">50%</span>
+            <span class="half__who">tú</span>
+            <span class="half__what">lo ahorras a tu ritmo</span>
+          </div>
+          <img class="half__pez" src="assets/pez-alcancia.webp?v=7" alt="Pez globo alcancía recibiendo monedas" loading="lazy" />
+          <div class="half__side half__side--vt">
+            <span class="half__pct">50%</span>
+            <span class="half__who">Viatto</span>
+            <span class="half__what">te lo pone en cuotas</span>
+          </div>
+        </div>
+        <p class="half__eq">= <b class="plate"><span>tu viaje completo</span><small>Cartagena</small></b></p>
+        <span class="half__kicker">¿Cómo se paga tu viaje?</span>
+        <small class="half__note">Crédito sujeto a aprobación.</small>
+      </section>
+
+      <section class="section section--dark cta join" id="unete">
+        <img class="avion" id="avion" src="assets/avion-papel.webp?v=5" alt="" aria-hidden="true" />
+        <div class="wrap cta__in">
+          <div>
+            <h2 class="big"><span class="pay">Cartagena</span> te espera.<br /><span class="join__h2b">Regístrate y <span class="pay">gana</span> <span class="join__mil"><span class="t-esc">5.000</span><span class="t-mov">5K</span> millas</span>.</span></h2>
+            <p class="cta__sub">Déjanos tus datos y te avisamos apenas abramos la app. Tus millas te estarán esperando.</p>
+            <p class="millas"><b>5K</b><span>Úsalas dentro de la app en tu <strong>primera experiencia Viatto</strong>.</span></p>
+          </div>
+          <form class="form" id="form" novalidate>
+            <label for="f-nombre">Nombre completo<input id="f-nombre" name="nombre" type="text" autocomplete="name" required /></label>
+            <label for="f-correo">Correo electrónico<input id="f-correo" name="correo" type="email" autocomplete="email" required /></label>
+            <label for="f-tel">Teléfono<input id="f-tel" name="telefono" type="tel" autocomplete="tel" inputmode="tel" placeholder="+57 300 000 0000" required /></label>
+            <label for="f-perfil"
+              >Me interesa como
+              <select id="f-perfil" name="perfil">
+                <option>Viajero</option>
+                <option>Promotor</option>
+                <option>Operador</option>
+              </select>
+            </label>
+            <button class="btn-millas" type="submit">¡Quiero mis 5K millas!</button>
+            <p class="form__msg" id="formMsg" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__in">
+        <div class="footer__brand">
+          <img src="assets/logo-claro.png" alt="Viatto" width="125" height="41" />
+          <p>Hecho con sabor en Cartagena.</p>
+          <div class="social" aria-label="Redes sociales de Viatto">
+            <a href="#" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 3.9 2.4 7.2 2.3 8.4 2.2 8.8 2.2 12 2.2zM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1 0 8.3 0 8.7 0 12s0 3.7.1 4.9c.2 4.4 2.6 6.8 7 7 1.2.1 1.6.1 4.9.1s3.7 0 4.9-.1c4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9s0-3.7-.1-4.9c-.2-4.4-2.6-6.8-7-7C15.7 0 15.3 0 12 0zm0 5.8a6.2 6.2 0 1 0 0 12.4 6.2 6.2 0 0 0 0-12.4zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.4-11.8a1.4 1.4 0 1 0 0 2.9 1.4 1.4 0 0 0 0-2.9z"/></svg></a>
+            <a href="#" aria-label="TikTok" title="TikTok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 0h4c.2 2.1 1.6 4.3 4 4.6v4.1c-1.5 0-3-.4-4.1-1.2v7.6c0 4.7-5.1 7.8-9.2 5.4-3.5-2-4.2-7-1.2-9.7 1.4-1.2 3.2-1.8 5-1.5v4.2c-1.9-.6-3.8 1.2-3.2 3.2.5 1.7 2.7 2.3 4 1.1.6-.5.7-1.3.7-2V0z"/></svg></a>
+            <a href="#" aria-label="Facebook" title="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12a12 12 0 1 0-13.9 11.9v-8.4h-3V12h3V9.4c0-3 1.8-4.7 4.5-4.7 1.3 0 2.7.2 2.7.2v3h-1.5c-1.5 0-2 .9-2 1.9V12h3.3l-.5 3.5h-2.8v8.4A12 12 0 0 0 24 12z"/></svg></a>
+            <a href="#" aria-label="YouTube" title="YouTube"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z"/></svg></a>
+          </div>
+        </div>
+        <div>
+          <h4>Viatto</h4>
+          <a href="#como-funciona">Cómo funciona</a>
+          <a href="#app">La app</a>
+          <a href="#claro">Ahorro y cuotas</a>
+        </div>
+        <div>
+          <h4>Aliados</h4>
+          <a href="#unete">Operadores</a>
+          <a href="#unete">Promotores</a>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <span>Términos y condiciones</span>
+          <span>Política de privacidad</span>
+        </div>
+      </div>
+      <div class="wrap footer__legal">
+        <span>© 2026 Viatto</span>
+        <span
+          >Viatto no es un banco. Los productos de ahorro y crédito se ofrecerán a través de aliados autorizados. Precios,
+          condiciones y disponibilidad pueden variar según el operador y la fecha.</span
+        >
+      </div>
+    </footer>
+
+
+
+    <script>
+      // Carrusel de mockups: se desliza solo esa columna; la lista de la izquierda marca el paso activo y sirve para saltar a su pantalla
+      (() => {
+        const track = document.getElementById("mockTrack");
+        const items = [...document.querySelectorAll("#featList li")];
+        const prev = document.getElementById("mockPrev");
+        const next = document.getElementById("mockNext");
+        if (!track || !items.length) return;
+        const count = track.children.length;
+        const index = () => Math.round(track.scrollLeft / track.clientWidth);
+        const go = (i) => track.scrollTo({ left: Math.max(0, Math.min(count - 1, i)) * track.clientWidth });
+        function state() {
+          const i = index();
+          items.forEach((li, k) => li.classList.toggle("is-on", k === i));
+          prev.disabled = i <= 0;
+          next.disabled = i >= count - 1;
+        }
+        items.forEach((li, k) => li.addEventListener("click", () => go(k)));
+        prev.addEventListener("click", () => go(index() - 1));
+        next.addEventListener("click", () => go(index() + 1));
+        track.addEventListener("scroll", state, { passive: true });
+        addEventListener("resize", state);
+        state();
+      })();
+
+      // Coco: sube cuando "No somos un banco" ocupa el centro de la pantalla y baja al salir
+      (() => {
+        const coco = document.getElementById("coco");
+        const sprite = document.getElementById("cocoSprite");
+        const section = document.getElementById("claro");
+        if (!coco || !section || !("IntersectionObserver" in window)) return;
+        const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        let up = false;
+        let last = -1;
+        let muted = false;
+        let talk = 0;
+        document.getElementById("cocoClose").addEventListener("click", () => {
+          muted = true;
+          coco.classList.remove("is-talking");
+        });
+        function draw(now) {
+          const f = Math.floor((now / 1000) * 15) % 45;
+          if (f !== last) {
+            last = f;
+            sprite.style.backgroundPosition = `${((f % 9) / 8) * 100}% ${(Math.floor(f / 9) / 4) * 100}%`;
+          }
+          if (up) requestAnimationFrame(draw);
+        }
+        new IntersectionObserver(
+          ([entry]) => {
+            const was = up;
+            up = entry.isIntersecting;
+            coco.classList.toggle("is-up", up);
+            // habla un momento después de asomar y se calla al esconderse
+            clearTimeout(talk);
+            if (up && !muted) talk = setTimeout(() => coco.classList.add("is-talking"), 900);
+            else coco.classList.remove("is-talking");
+            if (up && !was && !still) requestAnimationFrame(draw);
+          },
+          { rootMargin: "-45% 0px -45% 0px" },
+        ).observe(section);
+      })();
+
+      // Mojarra de la segunda sección: releva a la de la silla cuando esta sale de la pantalla.
+      // Usa los estilos .fish de styles.css (hoja de 8 × 6, 48 fotogramas, volteada hacia la derecha).
+      (() => {
+        const fish = document.getElementById("fish2");
+        const sprite = document.getElementById("fish2Sprite");
+        const eyes = document.getElementById("fish2Eyes");
+        let blinkAt = -1;
+        let nextBlink = 0;
+        const section = document.getElementById("como-funciona");
+        if (!fish || !section || !("IntersectionObserver" in window)) return;
+        const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        let up = false;
+        let last = -1;
+        let muted = false;
+        let talk = 0;
+        document.getElementById("fish2Close").addEventListener("click", () => {
+          muted = true;
+          fish.classList.remove("is-talking");
+        });
+        function draw(now) {
+          const f = Math.floor((now / 1000) * 20) % 48;
+          // parpadeo: a medias, cerrado, a medias; el siguiente llega entre 2 y 5,5 segundos después
+          if (!nextBlink) nextBlink = now + 1200;
+          if (blinkAt < 0 && now > nextBlink) blinkAt = now;
+          let lid = 0;
+          if (blinkAt >= 0) {
+            const e = Math.floor((now - blinkAt) / 60);
+            lid = e === 0 || e === 3 ? 1 : e === 1 || e === 2 ? 2 : 0;
+            if (e > 3) {
+              blinkAt = -1;
+              nextBlink = now + 2000 + Math.random() * 3500;
+            }
+          }
+          const key = f * 3 + lid;
+          if (key !== last) {
+            last = key;
+            sprite.style.backgroundPosition = `${((f % 8) / 7) * 100}% ${(Math.floor(f / 8) / 5) * 100}%`;
+            eyes.classList.toggle("is-on", lid > 0);
+            if (lid > 0) eyes.style.backgroundPosition = `${(f / 47) * 100}% ${(lid - 1) * 100}%`;
+          }
+          if (up) requestAnimationFrame(draw);
+        }
+        // Asoma justo cuando la mojarra de la silla (portada) termina de salir de la pantalla,
+        // y se esconde cuando esa silla vuelve a asomar o cuando la segunda sección ya quedó atrás.
+        const chair = document.getElementById("skyFish");
+        let chairVisible = true;
+        let sectionNear = false;
+        function update() {
+          const was = up;
+          up = !chairVisible && sectionNear;
+          fish.classList.toggle("is-up", up);
+          clearTimeout(talk);
+          if (up && !muted) talk = setTimeout(() => fish.classList.add("is-talking"), 900);
+          else fish.classList.remove("is-talking");
+          if (up && !was) {
+            // una URL nueva del mismo archivo (ya descargado) hace que la animación empiece otra vez
+            const crab = document.getElementById("fish2Crab");
+            const blob = (window.__crabBlob ||= fetch(crab.src).then((r) => r.blob()));
+            const stack = crab.parentElement;
+            stack.classList.remove("is-gesto");
+            clearTimeout(window.__crabLoop);
+            blob.then((b) => {
+              if (crab.dataset.url) URL.revokeObjectURL(crab.dataset.url);
+              crab.src = crab.dataset.url = URL.createObjectURL(b);
+              // el video completo dura 6 s (144 cuadros); al terminar se queda gesticulando en bucle, sin repetir el ciclo
+              window.__crabLoop = setTimeout(() => stack.classList.add("is-gesto"), 5850);
+            }).catch(() => stack.classList.add("is-gesto"));
+          }
+        }
+        // la silla cuenta como "fuera" cuando ya solo asoma en la franja superior de la pantalla (120 px)
+        new IntersectionObserver(
+          ([entry]) => {
+            chairVisible = entry.isIntersecting;
+            update();
+          },
+          { rootMargin: "-120px 0px 0px 0px" },
+        ).observe(chair);
+        new IntersectionObserver(
+          ([entry]) => {
+            sectionNear = entry.isIntersecting;
+            update();
+          },
+          { rootMargin: "-45% 0px 0px 0px" },
+        ).observe(section);
+      })();
+
+      // Mojarra de la portada: el cuerpo corre en bucle (30 fotogramas a 15 por segundo) y la boca sigue al texto del globo.
+      // El texto se escribe letra a letra y la boca se abre según la letra: mucho en a/o, medio en e, poco en i/u, cerrada en pausas.
+      (() => {
+        const fish = document.getElementById("skyFish");
+        if (!fish) return;
+        const mouth = document.getElementById("skyMouth");
+        const eyes = document.getElementById("skyEyes");
+        const say = document.getElementById("skySay");
+        const sayText = document.getElementById("skySayText");
+        const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const LINES = [
+          "¿Precio claro? ¡Así no se puede trabajar!",
+          "A 500 mil estaba barata…",
+          "Erda, me dañaron el negocio.",
+          "¿Y ahora lo preguntan todo antes de pedir?",
+        ];
+        const OPEN = { a: 3, á: 3, o: 3, ó: 3, e: 2, é: 2, i: 1, í: 1, u: 1, ú: 1 };
+        let level = 0; // 0 cerrada, 1 a 3 abierta
+        let blinkAt = -1; // momento en que empezó el parpadeo en curso
+        let nextBlink = 1800;
+        let lastKey = "";
+        let closed = false;
+        let timer = 0;
+        let i = 0;
+
+        function draw(now) {
+          const f = Math.floor((now / 1000) * 15) % 30;
+          // parpadeo: a medias, cerrado dos fotogramas, a medias; el siguiente llega entre 2 y 5,5 segundos después
+          if (blinkAt < 0 && now > nextBlink) blinkAt = now;
+          let lid = 0;
+          if (blinkAt >= 0) {
+            const e = Math.floor((now - blinkAt) / 66);
+            lid = e === 0 || e === 3 ? 1 : e === 1 || e === 2 ? 2 : 0;
+            if (e > 3) {
+              blinkAt = -1;
+              nextBlink = now + 2000 + Math.random() * 3500;
+            }
+          }
+          const key = f + "-" + level + "-" + lid;
+          if (key !== lastKey) {
+            lastKey = key;
+            fish.style.backgroundPosition = `${((f % 6) / 5) * 100}% ${(Math.floor(f / 6) / 4) * 100}%`;
+            mouth.classList.toggle("is-on", level > 0);
+            if (level > 0) mouth.style.backgroundPosition = `${(f / 29) * 100}% ${((level - 1) / 2) * 100}%`;
+            eyes.classList.toggle("is-on", lid > 0);
+            if (lid > 0) eyes.style.backgroundPosition = `${(f / 29) * 100}% ${(lid - 1) * 100}%`;
+          }
+          requestAnimationFrame(draw);
+        }
+
+        function bubble() {
+          const b = document.createElement("span");
+          b.className = "bub";
+          b.style.setProperty("--s", `${5 + Math.random() * 7}px`);
+          b.style.setProperty("--dx", `${8 - Math.random() * 40}px`);
+          b.style.setProperty("--t", `${1.6 + Math.random()}s`);
+          b.addEventListener("animationend", () => b.remove());
+          fish.appendChild(b);
+        }
+
+        function speak(line) {
+          let n = 0;
+          sayText.textContent = "";
+          say.classList.remove("is-out");
+          (function step() {
+            if (closed) return;
+            if (n >= line.length) {
+              level = 0;
+              timer = setTimeout(next, 2600);
+              return;
+            }
+            const ch = line[n++];
+            sayText.textContent = line.slice(0, n);
+            const vowel = OPEN[ch.toLowerCase()];
+            const pause = /[\s.,;:!?¡¿…]/.test(ch);
+            level = vowel !== undefined ? vowel : pause || /[mbp]/i.test(ch) ? 0 : 1;
+            if (vowel >= 2 && Math.random() < 0.16) bubble();
+            timer = setTimeout(step, /[.,!?…]/.test(ch) ? 280 : 72);
+          })();
+        }
+
+        function next() {
+          say.classList.add("is-out");
+          timer = setTimeout(() => {
+            i = (i + 1) % LINES.length;
+            speak(LINES[i]);
+          }, 380);
+        }
+
+        document.getElementById("skySayClose").addEventListener("click", () => {
+          closed = true;
+          clearTimeout(timer);
+          level = 0;
+          say.hidden = true;
+        });
+
+        // con "reducir movimiento" queda quieta, con la primera frase completa
+        if (still) {
+          sayText.textContent = LINES[0];
+          return;
+        }
+        requestAnimationFrame(draw);
+        speak(LINES[0]);
+        // una que otra burbuja también cuando está callada
+        setInterval(() => {
+          if (Math.random() < 0.45) bubble();
+        }, 3000);
+      })();
+
+      // Las tarjetas de "Descubre más" preseleccionan el perfil en el formulario
+      document.querySelectorAll("[data-perfil]").forEach((el) => {
+        el.addEventListener("click", () => {
+          document.getElementById("f-perfil").value = el.dataset.perfil;
+        });
+      });
+      // Formulario de demostración: valida en el navegador y todavía no envía los datos a ningún lado
+      const form = document.getElementById("form");
+      const msg = document.getElementById("formMsg");
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const okNombre = form.nombre.value.trim().length > 1;
+        const okCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo.value.trim());
+        const okTel = form.telefono.value.replace(/\D/g, "").length >= 7;
+        form.nombre.classList.toggle("is-bad", !okNombre);
+        form.telefono.classList.toggle("is-bad", !okTel);
+        form.correo.classList.toggle("is-bad", !okCorreo);
+        msg.classList.toggle("is-bad", !(okNombre && okCorreo && okTel));
+        if (!okNombre) msg.textContent = "Escribe tu nombre.";
+        else if (!okCorreo) msg.textContent = "Revisa el correo: falta algo, por ejemplo la @ o el dominio.";
+        else if (!okTel) msg.textContent = "Escribe tu número de teléfono.";
+        else msg.textContent = "Formulario de demostración: aún no está conectado, tus datos no se enviaron y las millas aún no se asignan.";
+      });
+
+    </script>
+  </body>
+</html>
