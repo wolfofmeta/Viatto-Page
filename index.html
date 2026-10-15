@@ -659,6 +659,8 @@
       }
       /* cada animación se muestra solo cuando ya cargó: nunca se ve el ícono de imagen rota */
       #fish2Crab:not(.is-ready) { visibility: hidden; }
+      /* el cangrejo y su globo no asoman hasta que la animación esté lista */
+      #fish2:not(.has-crab) { visibility: hidden; }
       /* bucle de gestos (tenazas arriba, riendo): reemplaza al video cuando termina de romper el letrero */
       .fish2__gesto {
         position: absolute;
@@ -1312,7 +1314,7 @@
           return files;
         }));
       }
-      addEventListener("load", () => setTimeout(crabFiles, 300));
+      crabFiles(); // empieza a descargarlas de una vez, sin esperar al resto de la página
 
       // Mojarra de la segunda sección: releva a la de la silla cuando esta sale de la pantalla.
       // Usa los estilos .fish de styles.css (hoja de 8 × 6, 48 fotogramas, volteada hacia la derecha).
@@ -1378,6 +1380,7 @@
               const url = URL.createObjectURL(b), old = crab.dataset.url;
               crab.onload = () => {
                 crab.classList.add("is-ready");
+                fish.classList.add("has-crab");
                 if (old) URL.revokeObjectURL(old);
                 // el video completo dura 6 s; al terminar se queda gesticulando en bucle
                 window.__crabLoop = setTimeout(() => stack.classList.add("is-gesto"), 5850);
@@ -1386,6 +1389,7 @@
             }).catch(() => {
               document.getElementById("fish2Gesto").src = "assets/cangrejo-gesto.webp?v=3";
               stack.classList.add("is-gesto");
+              fish.classList.add("has-crab");
             });
           }
         }
