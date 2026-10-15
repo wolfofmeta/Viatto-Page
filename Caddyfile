@@ -1,0 +1,17 @@
+# Servidor de la página en Railway: la página siempre se revisa al abrirla (sin versiones viejas guardadas)
+# y las imágenes se guardan en el navegador una semana.
+{
+	admin off
+	persist_config off
+	auto_https off
+}
+
+:{$PORT:80} {
+	root * /app
+	encode gzip
+	file_server
+	@html path / *.html
+	header @html Cache-Control "no-cache"
+	header /assets/* Cache-Control "public, max-age=604800"
+	header /*.css Cache-Control "no-cache"
+}
