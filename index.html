@@ -655,7 +655,10 @@
       .fish2__stack {
         position: relative;
         display: block;
+        aspect-ratio: 1; /* reserva el espacio aunque la animación aún no haya cargado */
       }
+      /* cada animación se muestra solo cuando ya cargó: nunca se ve el ícono de imagen rota */
+      #fish2Crab:not(.is-ready) { visibility: hidden; }
       /* bucle de gestos (tenazas arriba, riendo): reemplaza al video cuando termina de romper el letrero */
       .fish2__gesto {
         position: absolute;
@@ -1120,7 +1123,7 @@
             <button type="button" class="crab__close" id="fish2Close" aria-label="Cerrar mensaje">×</button>
             <p>¿Tours con el precio a la vista? ¿Y yo de qué vivo?</p>
           </div>
-          <span class="fish2__stack"><img class="fish2__crab" id="fish2Crab" src="assets/cangrejo-letrero.webp?v=3" alt="El cangrejo rompe el letrero de 100 mil" /><img class="fish2__crab fish2__gesto" id="fish2Gesto" src="assets/cangrejo-gesto.webp?v=2" alt="" aria-hidden="true" /></span>
+          <span class="fish2__stack" role="img" aria-label="El cangrejo rompe el letrero de 100 mil"><img class="fish2__crab" id="fish2Crab" alt="" /><img class="fish2__crab fish2__gesto" id="fish2Gesto" alt="" /></span>
         </div>
         <div class="wrap feat">
           <div>
@@ -1300,6 +1303,17 @@
         ).observe(section);
       })();
 
+      // Animaciones del cangrejo: se descargan una sola vez, en segundo plano, apenas carga la página
+      function crabFiles() {
+        return (window.__crabFiles ||= Promise.all(
+          ["assets/cangrejo-letrero.webp?v=4", "assets/cangrejo-gesto.webp?v=3"].map((u) => fetch(u).then((r) => r.blob())),
+        ).then((files) => {
+          document.getElementById("fish2Gesto").src = URL.createObjectURL(files[1]);
+          return files;
+        }));
+      }
+      addEventListener("load", () => setTimeout(crabFiles, 300));
+
       // Mojarra de la segunda sección: releva a la de la silla cuando esta sale de la pantalla.
       // Usa los estilos .fish de styles.css (hoja de 8 × 6, 48 fotogramas, volteada hacia la derecha).
       (() => {
@@ -1355,18 +1369,24 @@
           if (up && !muted) talk = setTimeout(() => fish.classList.add("is-talking"), 900);
           else fish.classList.remove("is-talking");
           if (up && !was) {
-            // una URL nueva del mismo archivo (ya descargado) hace que la animación empiece otra vez
+            // una URL nueva del archivo ya descargado hace que la animación empiece otra vez
             const crab = document.getElementById("fish2Crab");
-            const blob = (window.__crabBlob ||= fetch(crab.src).then((r) => r.blob()));
             const stack = crab.parentElement;
             stack.classList.remove("is-gesto");
             clearTimeout(window.__crabLoop);
-            blob.then((b) => {
-              if (crab.dataset.url) URL.revokeObjectURL(crab.dataset.url);
-              crab.src = crab.dataset.url = URL.createObjectURL(b);
-              // el video completo dura 6 s (144 cuadros); al terminar se queda gesticulando en bucle, sin repetir el ciclo
-              window.__crabLoop = setTimeout(() => stack.classList.add("is-gesto"), 5850);
-            }).catch(() => stack.classList.add("is-gesto"));
+            crabFiles().then(([b]) => {
+              const url = URL.createObjectURL(b), old = crab.dataset.url;
+              crab.onload = () => {
+                crab.classList.add("is-ready");
+                if (old) URL.revokeObjectURL(old);
+                // el video completo dura 6 s; al terminar se queda gesticulando en bucle
+                window.__crabLoop = setTimeout(() => stack.classList.add("is-gesto"), 5850);
+              };
+              crab.src = crab.dataset.url = url;
+            }).catch(() => {
+              document.getElementById("fish2Gesto").src = "assets/cangrejo-gesto.webp?v=3";
+              stack.classList.add("is-gesto");
+            });
           }
         }
         // la silla cuenta como "fuera" cuando ya solo asoma en la franja superior de la pantalla (120 px)
