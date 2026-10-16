@@ -1076,6 +1076,13 @@
       }
     </style>
     <style>.t-mov { display: none; }</style>
+    <style>
+      .form__check { flex-direction: row !important; align-items: flex-start; gap: 10px !important; font-weight: 400 !important; font-size: 0.82rem !important; line-height: 1.4; }
+      .form__check input { width: 18px; height: 18px; margin-top: 2px; flex: none; accent-color: #0A8F4E; }
+      .form__check a { color: #0A7A43; }
+      .form__trampa { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+      .btn-millas:disabled { opacity: .6; cursor: wait; }
+    </style>
     <link rel="stylesheet" href="propuesta-3-movil.css" />
   </head>
   <body>
@@ -1192,7 +1199,10 @@
                 <option>Operador</option>
               </select>
             </label>
-            <button class="btn-millas" type="submit">¡Quiero mis 5K millas!</button>
+            <label class="form__check" for="f-datos"><input id="f-datos" name="acepta_datos" type="checkbox" required /> <span>Autorizo a Viatto a tratar mis datos según la <a href="politica-de-privacidad.html" target="_blank" rel="noopener">Política de privacidad</a>.</span></label>
+            <label class="form__check" for="f-mkt"><input id="f-mkt" name="acepta_marketing" type="checkbox" checked /> <span>Quiero recibir novedades, promociones y el aviso de lanzamiento por correo.</span></label>
+            <input class="form__trampa" name="empresa" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" />
+            <button class="btn-millas" type="submit" id="formBtn">¡Quiero mis 5K millas!</button>
             <p class="form__msg" id="formMsg" role="status" aria-live="polite"></p>
           </form>
         </div>
@@ -1225,7 +1235,7 @@
         <div>
           <h4>Legal</h4>
           <span>Términos y condiciones</span>
-          <span>Política de privacidad</span>
+          <a href="politica-de-privacidad.html">Política de privacidad</a>
         </div>
       </div>
       <div class="wrap footer__legal">
@@ -1536,8 +1546,30 @@
         if (!okNombre) msg.textContent = "Escribe tu nombre.";
         else if (!okCorreo) msg.textContent = "Revisa el correo: falta algo, por ejemplo la @ o el dominio.";
         else if (!okTel) msg.textContent = "Escribe tu número de teléfono.";
-        else msg.textContent = "Formulario de demostración: aún no está conectado, tus datos no se enviaron y las millas aún no se asignan.";
+        else if (!form.acepta_datos.checked) { msg.classList.add("is-bad"); msg.textContent = "Para registrarte, autoriza el tratamiento de tus datos."; }
+        else enviar();
       });
+      // Envía el registro a la base de datos de Viatto (api/registro.php en Hostinger)
+      async function enviar() {
+        const btn = document.getElementById("formBtn");
+        const q = new URLSearchParams(location.search);
+        const datos = {
+          nombre: form.nombre.value.trim(), correo: form.correo.value.trim(), telefono: form.telefono.value.trim(),
+          perfil: form.perfil.value, acepta_datos: form.acepta_datos.checked, acepta_marketing: form.acepta_marketing.checked,
+          empresa: form.empresa.value, origen: location.pathname,
+          utm_source: q.get("utm_source") || "", utm_medium: q.get("utm_medium") || "", utm_campaign: q.get("utm_campaign") || "",
+        };
+        btn.disabled = true; msg.classList.remove("is-bad"); msg.textContent = "Enviando…";
+        try {
+          const r = await fetch("api/registro.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok || !j.ok) throw new Error(j.error || "No pudimos enviar tu registro. Intenta de nuevo.");
+          msg.textContent = j.repetido ? "Ya estabas registrado con ese correo. Te avisaremos apenas abramos la app." : "¡Listo, " + datos.nombre.split(" ")[0] + "! Quedaste registrado. Te avisaremos apenas abramos la app.";
+          form.reset();
+        } catch (err) {
+          msg.classList.add("is-bad"); msg.textContent = err.message;
+        } finally { btn.disabled = false; }
+      }
 
     </script>
   </body>

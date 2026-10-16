@@ -1,0 +1,5 @@
+# Nadie puede abrir config.php ni db.php desde el navegador
+<FilesMatch "^(config|config\.example|db)\.php$">
+  Require all denied
+</FilesMatch>
+Options -Indexes
