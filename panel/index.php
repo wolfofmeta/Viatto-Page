@@ -36,7 +36,7 @@ if (isset($_POST['sincronizar']) && !empty($c['brevo_api_key'])) {
     curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 8,
       CURLOPT_HTTPHEADER => ['api-key: ' . $c['brevo_api_key'], 'Content-Type: application/json'],
       CURLOPT_POSTFIELDS => json_encode(['email' => $r['correo'], 'updateEnabled' => true, 'listIds' => [(int)$c['brevo_list_id']],
-        'attributes' => ['FIRSTNAME' => $partes[0], 'LASTNAME' => $partes[1] ?? '', 'TELEFONO' => $r['telefono'], 'PERFIL' => $r['perfil'], 'PAIS' => $r['pais_nombre'] ?? '']])]);
+        'attributes' => ['NOMBRE' => $partes[0], 'APELLIDOS' => $partes[1] ?? '', 'TELEFONO' => $r['telefono'], 'PERFIL' => $r['perfil'], 'PAIS' => $r['pais_nombre'] ?? '']])]);
     curl_exec($ch); $st = curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
     if ($st >= 200 && $st < 300) { $db->prepare("UPDATE registros SET brevo_ok = 1 WHERE id = ?")->execute([$r['id']]); $n++; }
   }

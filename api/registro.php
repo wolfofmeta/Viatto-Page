@@ -57,7 +57,7 @@ if ($mkt && !empty($c['brevo_api_key']) && !empty($c['brevo_list_id'])) {
     CURLOPT_HTTPHEADER => ['api-key: ' . $c['brevo_api_key'], 'Content-Type: application/json', 'Accept: application/json'],
     CURLOPT_POSTFIELDS => json_encode([
       'email' => $correo, 'updateEnabled' => true, 'listIds' => [(int)$c['brevo_list_id']],
-      'attributes' => ['FIRSTNAME' => $partes[0], 'LASTNAME' => $partes[1] ?? '', 'TELEFONO' => $tel, 'PAIS' => $geo['pais_nombre'] ?? '', 'PERFIL' => $perfil],
+      'attributes' => ['NOMBRE' => $partes[0], 'APELLIDOS' => $partes[1] ?? '', 'TELEFONO' => $tel, 'PAIS' => $geo['pais_nombre'] ?? '', 'PERFIL' => $perfil],
     ]),
   ]);
   curl_exec($ch);
