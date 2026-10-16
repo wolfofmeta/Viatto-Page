@@ -49,6 +49,11 @@ foreach ($db->query("SELECT id, ip, telefono FROM registros WHERE pais IS NULL A
   $db->prepare("UPDATE registros SET pais = ?, pais_nombre = ?, ciudad = ?, telefono = ? WHERE id = ?")
      ->execute([$g['pais'] ?? '--', $g['pais_nombre'] ?? null, $g['ciudad'] ?? null, viatto_telefono($r['telefono'], $g['pais'] ?? null), $r['id']]);
 }
+// Corrige teléfonos a los que se les puso +1 de más (ya traían otro indicativo)
+foreach ($db->query("SELECT id, telefono FROM registros WHERE telefono LIKE '+1%'")->fetchAll() as $r) {
+  $d = preg_replace('/\D/', '', $r['telefono']);
+  if (strlen($d) > 11 && viatto_prefijo(substr($d, 1))) $db->prepare("UPDATE registros SET telefono = ? WHERE id = ?")->execute([viatto_telefono('+' . substr($d, 1), null), $r['id']]);
+}
 $total = (int)$db->query("SELECT COUNT(*) FROM registros")->fetchColumn();
 $hoy = (int)$db->query("SELECT COUNT(*) FROM registros WHERE DATE(creado) = CURDATE()")->fetchColumn();
 $semana = (int)$db->query("SELECT COUNT(*) FROM registros WHERE creado > NOW() - INTERVAL 7 DAY")->fetchColumn();
