@@ -32,5 +32,10 @@ function viatto_db() {
     creado DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX (creado), INDEX (perfil), INDEX (ip)
   ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+  // columnas nuevas de ubicación (se agregan solas si faltan)
+  $cols = $pdo->query("SHOW COLUMNS FROM registros")->fetchAll(PDO::FETCH_COLUMN);
+  foreach (["pais" => "CHAR(2) NULL", "pais_nombre" => "VARCHAR(60) NULL", "ciudad" => "VARCHAR(80) NULL"] as $k => $t) {
+    if (!in_array($k, $cols, true)) $pdo->exec("ALTER TABLE registros ADD COLUMN $k $t");
+  }
   return $pdo;
 }

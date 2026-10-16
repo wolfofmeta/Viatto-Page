@@ -2,6 +2,7 @@
 // Panel de registros de la landing de Viatto
 session_start();
 require __DIR__ . '/../api/db.php';
+require __DIR__ . '/../api/geo.php';
 $c = viatto_config();
 header('Cache-Control: no-store');
 header('X-Robots-Tag: noindex');
@@ -42,6 +43,12 @@ if (isset($_POST['sincronizar']) && !empty($c['brevo_api_key'])) {
   $aviso = "Se enviaron $n contactos a Brevo.";
 }
 
+// Completar país y teléfono de registros anteriores que no los tengan (hasta 40 por visita)
+foreach ($db->query("SELECT id, ip, telefono FROM registros WHERE pais IS NULL AND ip IS NOT NULL AND ip <> '' LIMIT 40")->fetchAll() as $r) {
+  $g = viatto_geo($r['ip']);
+  $db->prepare("UPDATE registros SET pais = ?, pais_nombre = ?, ciudad = ?, telefono = ? WHERE id = ?")
+     ->execute([$g['pais'] ?? '--', $g['pais_nombre'] ?? null, $g['ciudad'] ?? null, viatto_telefono($r['telefono'], $g['pais'] ?? null), $r['id']]);
+}
 $total = (int)$db->query("SELECT COUNT(*) FROM registros")->fetchColumn();
 $hoy = (int)$db->query("SELECT COUNT(*) FROM registros WHERE DATE(creado) = CURDATE()")->fetchColumn();
 $semana = (int)$db->query("SELECT COUNT(*) FROM registros WHERE creado > NOW() - INTERVAL 7 DAY")->fetchColumn();
@@ -49,6 +56,7 @@ $mkt = (int)$db->query("SELECT COUNT(*) FROM registros WHERE acepta_marketing = 
 $pend = (int)$db->query("SELECT COUNT(*) FROM registros WHERE acepta_marketing = 1 AND brevo_ok = 0")->fetchColumn();
 $perfiles = $db->query("SELECT perfil, COUNT(*) n FROM registros GROUP BY perfil")->fetchAll(PDO::FETCH_KEY_PAIR);
 $dias = $db->query("SELECT DATE(creado) d, COUNT(*) n FROM registros WHERE creado > CURDATE() - INTERVAL 29 DAY GROUP BY d")->fetchAll(PDO::FETCH_KEY_PAIR);
+$paises = $db->query("SELECT pais, COALESCE(pais_nombre, pais) n2, COUNT(*) n FROM registros WHERE pais IS NOT NULL AND pais <> '--' GROUP BY pais, n2 ORDER BY n DESC LIMIT 6")->fetchAll();
 $fuentes = $db->query("SELECT COALESCE(NULLIF(utm_source,''),'directo') f, COUNT(*) n FROM registros GROUP BY f ORDER BY n DESC LIMIT 6")->fetchAll(PDO::FETCH_KEY_PAIR);
 
 $buscar = trim($_GET['q'] ?? '');
@@ -106,12 +114,13 @@ table{border-collapse:collapse;width:100%;min-width:760px}th,td{padding:10px 12p
   <div class="box"><h2>Registros por día · últimos 30 días</h2><div class="bars"><?php for ($i = 29; $i >= 0; $i--) { $d = date('Y-m-d', strtotime("-$i day")); $n = $dias[$d] ?? 0; echo '<i style="height:' . round($n / $max * 100) . '%" data-t="' . date('d/m', strtotime($d)) . ' · ' . $n . '"></i>'; } ?></div>
   <div class="axis"><span><?= date('d/m', strtotime('-29 day')) ?></span><span>hoy</span></div></div>
   <div class="box"><h2>Por perfil</h2><div class="lst"><?php foreach (['Viajero', 'Promotor', 'Operador'] as $p) { $n = (int)($perfiles[$p] ?? 0); echo '<div><span>' . $p . '</span><b>' . $n . '</b></div><div class="meter"><i style="width:' . ($total ? round($n / $total * 100) : 0) . '%"></i></div>'; } ?></div>
+  <h2 style="margin-top:18px">Por país</h2><div class="lst"><?php foreach ($paises as $x) echo '<div><span>' . viatto_bandera($x['pais']) . ' ' . $e($x['n2']) . '</span><b>' . $x['n'] . '</b></div>'; if (!$paises) echo '<div class="no">Aún sin datos</div>'; ?></div>
   <h2 style="margin-top:18px">Por fuente</h2><div class="lst"><?php foreach ($fuentes as $f => $n) echo '<div><span>' . $e($f) . '</span><b>' . $n . '</b></div>'; if (!$fuentes) echo '<div class="no">Aún sin datos</div>'; ?></div></div>
 </div>
 <form class="f" method="get"><input name="q" value="<?= $e($buscar) ?>" placeholder="Buscar nombre, correo o teléfono" aria-label="Buscar"><select name="perfil" aria-label="Perfil"><option value="">Todos los perfiles</option><?php foreach (['Viajero', 'Promotor', 'Operador'] as $p) echo "<option" . ($filtro === $p ? ' selected' : '') . ">$p</option>"; ?></select><button class="btn">Filtrar</button></form>
-<div class="tbl"><table><thead><tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Perfil</th><th>Correos</th><th>Brevo</th><th>Fuente</th></tr></thead><tbody>
-<?php foreach ($filas as $r): ?><tr><td><?= $e(date('d/m/Y H:i', strtotime($r['creado']))) ?></td><td><?= $e($r['nombre']) ?></td><td><?= $e($r['correo']) ?></td><td><?= $e($r['telefono']) ?></td><td><span class="pill"><?= $e($r['perfil']) ?></span></td><td class="<?= $r['acepta_marketing'] ? 'ok' : 'no' ?>"><?= $r['acepta_marketing'] ? 'Sí' : 'No' ?></td><td class="<?= $r['brevo_ok'] ? 'ok' : 'no' ?>"><?= $r['brevo_ok'] ? 'Sí' : '—' ?></td><td><?= $e($r['utm_source'] ?: 'directo') ?></td></tr><?php endforeach; ?>
-<?php if (!$filas) echo '<tr><td colspan="8" class="no">Todavía no hay registros' . ($buscar || $filtro ? ' con ese filtro' : '') . '. Llegan aquí apenas alguien llena el formulario de viattopay.com.</td></tr>'; ?>
+<div class="tbl"><table><thead><tr><th>Fecha</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>País</th><th>Perfil</th><th>Correos</th><th>Brevo</th><th>Fuente</th></tr></thead><tbody>
+<?php foreach ($filas as $r): ?><tr><td><?= $e(date('d/m/Y H:i', strtotime($r['creado']))) ?></td><td><?= $e($r['nombre']) ?></td><td><?= $e($r['correo']) ?></td><td><?= $e($r['telefono']) ?></td><td title="<?= $e(trim(($r['ciudad'] ?? '') . ' · IP ' . $r['ip'], ' ·')) ?>"><?= $r['pais'] && $r['pais'] !== '--' ? viatto_bandera($r['pais']) . ' ' . $e($r['pais_nombre'] ?: $r['pais']) . ($r['ciudad'] ? '<br><small class="no">' . $e($r['ciudad']) . '</small>' : '') : '<span class="no">—</span>' ?></td><td><span class="pill"><?= $e($r['perfil']) ?></span></td><td class="<?= $r['acepta_marketing'] ? 'ok' : 'no' ?>"><?= $r['acepta_marketing'] ? 'Sí' : 'No' ?></td><td class="<?= $r['brevo_ok'] ? 'ok' : 'no' ?>"><?= $r['brevo_ok'] ? 'Sí' : '—' ?></td><td><?= $e($r['utm_source'] ?: 'directo') ?></td></tr><?php endforeach; ?>
+<?php if (!$filas) echo '<tr><td colspan="9" class="no">Todavía no hay registros' . ($buscar || $filtro ? ' con ese filtro' : '') . '. Llegan aquí apenas alguien llena el formulario de viattopay.com.</td></tr>'; ?>
 </tbody></table></div>
 <p class="sub">Se muestran los 300 más recientes. Para ver todos, descarga el CSV.</p>
 </div></body></html>

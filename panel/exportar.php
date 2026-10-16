@@ -7,7 +7,7 @@ header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename="viatto-registros-' . date('Y-m-d') . '.csv"');
 $out = fopen('php://output', 'w');
 fwrite($out, "\xEF\xBB\xBF"); // para que Excel lea bien las tildes
-fputcsv($out, ['Fecha', 'Nombre', 'Correo', 'Teléfono', 'Perfil', 'Acepta correos', 'En Brevo', 'Fuente', 'Medio', 'Campaña']);
+fputcsv($out, ['Fecha', 'Nombre', 'Correo', 'Teléfono', 'País', 'Ciudad', 'Perfil', 'Acepta correos', 'En Brevo', 'Fuente', 'Medio', 'Campaña']);
 foreach (viatto_db()->query("SELECT * FROM registros ORDER BY creado DESC") as $r) {
-  fputcsv($out, [$r['creado'], $r['nombre'], $r['correo'], $r['telefono'], $r['perfil'], $r['acepta_marketing'] ? 'Sí' : 'No', $r['brevo_ok'] ? 'Sí' : 'No', $r['utm_source'], $r['utm_medium'], $r['utm_campaign']]);
+  fputcsv($out, [$r['creado'], $r['nombre'], $r['correo'], $r['telefono'], $r['pais_nombre'], $r['ciudad'], $r['perfil'], $r['acepta_marketing'] ? 'Sí' : 'No', $r['brevo_ok'] ? 'Sí' : 'No', $r['utm_source'], $r['utm_medium'], $r['utm_campaign']]);
 }

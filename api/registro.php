@@ -1,6 +1,7 @@
 <?php
 // Recibe el formulario de la landing, lo guarda y lo envía a Brevo si está configurado.
 require __DIR__ . '/db.php';
+require __DIR__ . '/geo.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 $c = viatto_config();
@@ -26,8 +27,7 @@ if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) $falla('Revisa el correo.');
 if (strlen(preg_replace('/\D/', '', $tel)) < 7) $falla('Escribe tu número de teléfono.');
 if (!$datos) $falla('Debes autorizar el tratamiento de tus datos para registrarte.');
 
-$ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '';
-$ip = trim(explode(',', $ip)[0]);
+$ip = viatto_ip();
 $db = viatto_db();
 
 // Máximo 5 registros por IP cada 10 minutos
@@ -35,11 +35,13 @@ $q = $db->prepare("SELECT COUNT(*) FROM registros WHERE ip = ? AND creado > NOW(
 $q->execute([$ip]);
 if ($q->fetchColumn() >= 5) $falla('Demasiados intentos. Prueba de nuevo en unos minutos.', 429);
 
+$geo = viatto_geo($ip);
+$tel = viatto_telefono($tel, $geo['pais'] ?? null);
 $utm = fn($k) => isset($in[$k]) ? mb_substr(preg_replace('/[^\w\-.]/u', '', $in[$k]), 0, 80) : null;
 try {
-  $db->prepare("INSERT INTO registros (nombre, correo, telefono, perfil, acepta_datos, acepta_marketing, origen, utm_source, utm_medium, utm_campaign, ip)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?)")
-    ->execute([$nombre, $correo, $tel, $perfil, 1, $mkt ? 1 : 0, mb_substr($in['origen'] ?? '', 0, 190), $utm('utm_source'), $utm('utm_medium'), $utm('utm_campaign'), $ip]);
+  $db->prepare("INSERT INTO registros (nombre, correo, telefono, perfil, acepta_datos, acepta_marketing, origen, utm_source, utm_medium, utm_campaign, ip, pais, pais_nombre, ciudad)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+    ->execute([$nombre, $correo, $tel, $perfil, 1, $mkt ? 1 : 0, mb_substr($in['origen'] ?? '', 0, 190), $utm('utm_source'), $utm('utm_medium'), $utm('utm_campaign'), $ip, $geo['pais'] ?? null, $geo['pais_nombre'] ?? null, $geo['ciudad'] ?? null]);
   $id = $db->lastInsertId();
 } catch (PDOException $e) {
   if ($e->getCode() == 23000) exit(json_encode(['ok' => true, 'repetido' => true])); // el correo ya estaba registrado
@@ -55,7 +57,7 @@ if ($mkt && !empty($c['brevo_api_key']) && !empty($c['brevo_list_id'])) {
     CURLOPT_HTTPHEADER => ['api-key: ' . $c['brevo_api_key'], 'Content-Type: application/json', 'Accept: application/json'],
     CURLOPT_POSTFIELDS => json_encode([
       'email' => $correo, 'updateEnabled' => true, 'listIds' => [(int)$c['brevo_list_id']],
-      'attributes' => ['FIRSTNAME' => $partes[0], 'LASTNAME' => $partes[1] ?? '', 'SMS' => preg_replace('/[^\d+]/', '', $tel), 'PERFIL' => $perfil],
+      'attributes' => ['FIRSTNAME' => $partes[0], 'LASTNAME' => $partes[1] ?? '', 'SMS' => preg_replace('/[^\d+]/', '', $tel), 'PAIS' => $geo['pais_nombre'] ?? '', 'PERFIL' => $perfil],
     ]),
   ]);
   curl_exec($ch);
