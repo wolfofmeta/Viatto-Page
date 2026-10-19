@@ -6,5 +6,16 @@
   <FilesMatch "\.(webp|png|jpg|svg|mp4)$">
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>
+  # Cabeceras de seguridad
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 </IfModule>
 AddType image/webp .webp
+Options -Indexes
+# Nadie puede abrir archivos ocultos ni de configuración
+<FilesMatch "^\.|\.(sql|bak|log|ini|env)$">
+  Require all denied
+</FilesMatch>

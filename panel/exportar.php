@@ -1,5 +1,6 @@
 <?php
 // Descarga todos los registros en CSV (para Excel o para importar en otra herramienta)
+session_set_cookie_params(['lifetime' => 0, 'path' => '/panel', 'secure' => true, 'httponly' => true, 'samesite' => 'Strict']);
 session_start();
 if (empty($_SESSION['viatto_panel'])) { http_response_code(403); exit('Inicia sesión en el panel.'); }
 require __DIR__ . '/../api/db.php';

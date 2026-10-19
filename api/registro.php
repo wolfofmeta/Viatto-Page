@@ -8,6 +8,8 @@ $c = viatto_config();
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if ($origin && in_array($origin, $c['origenes'], true)) { header("Access-Control-Allow-Origin: $origin"); header('Vary: Origin'); }
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { header('Access-Control-Allow-Methods: POST'); header('Access-Control-Allow-Headers: Content-Type'); exit; }
+// Solo se aceptan envíos desde viattopay.com
+if ($origin && !in_array($origin, $c['origenes'], true)) { http_response_code(403); exit(json_encode(['ok' => false, 'error' => 'Origen no permitido'])); }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { http_response_code(405); exit(json_encode(['ok' => false, 'error' => 'Método no permitido'])); }
 
 $in = json_decode(file_get_contents('php://input'), true) ?: $_POST;
@@ -49,7 +51,10 @@ try {
 }
 
 // Enviar a Brevo solo si la persona aceptó recibir correos
-if ($mkt && !empty($c['brevo_api_key']) && !empty($c['brevo_list_id'])) {
+// Protege el cupo de Brevo (300 correos/día en el plan gratis): si hay una avalancha de registros
+// en 24 h, se siguen guardando pero no se envían a Brevo hasta revisarlos desde el panel
+$avalancha = (int)$db->query("SELECT COUNT(*) FROM registros WHERE creado > NOW() - INTERVAL 1 DAY")->fetchColumn() > 250;
+if ($mkt && !$avalancha && !empty($c['brevo_api_key']) && !empty($c['brevo_list_id'])) {
   $partes = preg_split('/\s+/', $nombre, 2);
   $ch = curl_init('https://api.brevo.com/v3/contacts');
   curl_setopt_array($ch, [

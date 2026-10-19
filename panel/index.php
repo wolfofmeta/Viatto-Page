@@ -1,5 +1,6 @@
 <?php
 // Panel de registros de la landing de Viatto
+session_set_cookie_params(['lifetime' => 0, 'path' => '/panel', 'secure' => true, 'httponly' => true, 'samesite' => 'Strict']);
 session_start();
 require __DIR__ . '/../api/db.php';
 require __DIR__ . '/../api/geo.php';
@@ -12,10 +13,21 @@ $error = '';
 if (empty($_SESSION['viatto_panel'])) {
   if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     usleep(400000); // frena intentos repetidos
-    if (!empty($c['panel_pass_hash']) && password_verify($_POST['clave'] ?? '', $c['panel_pass_hash'])) {
+    // Bloqueo: 5 intentos fallidos por IP en 15 minutos
+    $db0 = viatto_db();
+    $db0->exec("CREATE TABLE IF NOT EXISTS panel_intentos (ip VARCHAR(45) NOT NULL, creado DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, INDEX (ip, creado))");
+    $ipx = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '')[0]);
+    $q0 = $db0->prepare("SELECT COUNT(*) FROM panel_intentos WHERE ip = ? AND creado > NOW() - INTERVAL 15 MINUTE");
+    $q0->execute([$ipx]);
+    if ($q0->fetchColumn() >= 5) {
+      $error = 'Demasiados intentos. Espera 15 minutos.';
+    } elseif (!empty($c['panel_pass_hash']) && password_verify($_POST['clave'] ?? '', $c['panel_pass_hash'])) {
+      $db0->prepare("DELETE FROM panel_intentos WHERE ip = ?")->execute([$ipx]);
       session_regenerate_id(true); $_SESSION['viatto_panel'] = 1; header('Location: ./'); exit;
+    } else {
+      $db0->prepare("INSERT INTO panel_intentos (ip) VALUES (?)")->execute([$ipx]);
+      $error = 'Contraseña incorrecta.';
     }
-    $error = 'Contraseña incorrecta.';
   }
   ?><!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Panel Viatto</title>
   <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#062A1C;font:15px/1.5 system-ui,sans-serif;color:#fff}form{background:#0A2419;padding:32px;border-radius:20px;width:min(360px,90vw);display:grid;gap:14px}h1{margin:0;font-size:22px}input{padding:12px;border-radius:10px;border:1px solid #2a5a43;background:#fff;color:#062A1C;font:inherit}button{padding:12px;border:0;border-radius:999px;background:#0A8F4E;color:#fff;font-weight:600;cursor:pointer}p{margin:0;color:#ffb3b3}</style></head>

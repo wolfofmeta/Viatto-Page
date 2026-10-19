@@ -1,5 +1,5 @@
-# Nadie puede abrir config.php ni db.php desde el navegador
-<FilesMatch "^(config|config\.example|db)\.php$">
+# Desde el navegador solo se puede usar registro.php; el resto son piezas internas
+<FilesMatch "^(config|config\.example|db|geo)\.php$">
   Require all denied
 </FilesMatch>
 Options -Indexes
