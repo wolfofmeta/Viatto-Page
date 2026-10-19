@@ -1083,6 +1083,19 @@
       .form__trampa { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
       .btn-millas:disabled { opacity: .6; cursor: wait; }
     </style>
+    <style>
+      /* Ventana de gracias al terminar el registro */
+      .gracias { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: rgba(6, 42, 28, 0.6); }
+      .gracias[hidden] { display: none; }
+      .gracias__box { position: relative; width: min(440px, 100%); padding: 40px 28px 28px; border: 3px solid #062A1C; border-radius: 26px; background: #fff; color: #062A1C; text-align: center; box-shadow: 8px 10px 0 #08e773; animation: gracias-in 0.35s cubic-bezier(0.3, 1.4, 0.5, 1); }
+      .gracias__medalla { display: grid; place-items: center; width: 84px; height: 84px; margin: -82px auto 14px; border: 4px solid #fff; border-radius: 50%; background: #ffd400; font: 900 2rem "Archivo", sans-serif; font-stretch: 68%; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); animation: millas-pop 2.4s ease-in-out infinite; }
+      .gracias h3 { margin: 0 0 10px; font: 900 1.8rem/1.05 "Archivo", sans-serif; font-stretch: 68%; text-transform: uppercase; }
+      .gracias p { margin: 0 0 22px; font-size: 1rem; line-height: 1.5; color: rgba(6, 42, 28, 0.8); }
+      .gracias p strong { color: #0A8F4E; }
+      .gracias__x { position: absolute; top: 10px; right: 14px; border: 0; background: none; font-size: 1.8rem; line-height: 1; color: #062A1C; cursor: pointer; }
+      .gracias__ok { margin-top: 0; }
+      @keyframes gracias-in { from { opacity: 0; transform: translateY(20px) scale(0.92); } to { opacity: 1; transform: none; } }
+    </style>
     <link rel="stylesheet" href="propuesta-3-movil.css" />
   </head>
   <body>
@@ -1208,6 +1221,16 @@
         </div>
       </section>
     </main>
+
+    <div class="gracias" id="gracias" hidden role="dialog" aria-modal="true" aria-labelledby="graciasTitulo">
+      <div class="gracias__box">
+        <button type="button" class="gracias__x" id="graciasX" aria-label="Cerrar">×</button>
+        <div class="gracias__medalla">5K</div>
+        <h3 id="graciasTitulo">¡Gracias por registrarte<span id="graciasNombre"></span>!</h3>
+        <p>Gracias por registrarte en Viatto Pay. Tus <strong>5.000 millas de bienvenida</strong> te estarán esperando para tu primera experiencia en Cartagena.</p>
+        <button type="button" class="btn-millas gracias__ok" id="graciasOk">¡Listo!</button>
+      </div>
+    </div>
 
     <footer class="footer">
       <div class="wrap footer__in">
@@ -1549,6 +1572,13 @@
         else if (!form.acepta_datos.checked) { msg.classList.add("is-bad"); msg.textContent = "Para registrarte, autoriza el tratamiento de tus datos."; }
         else enviar();
       });
+      // Cerrar la ventana de gracias (botón, X, clic afuera o Escape)
+      const gracias = document.getElementById("gracias");
+      const cerrarGracias = () => { gracias.hidden = true; };
+      document.getElementById("graciasOk").onclick = cerrarGracias;
+      document.getElementById("graciasX").onclick = cerrarGracias;
+      gracias.addEventListener("click", (e) => { if (e.target === gracias) cerrarGracias(); });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !gracias.hidden) cerrarGracias(); });
       // Envía el registro a la base de datos de Viatto (api/registro.php en Hostinger)
       async function enviar() {
         const btn = document.getElementById("formBtn");
@@ -1566,6 +1596,10 @@
           if (!r.ok || !j.ok) throw new Error(j.error || "No pudimos enviar tu registro. Intenta de nuevo.");
           msg.textContent = j.repetido ? "Ya estabas registrado con ese correo. Te avisaremos apenas abramos la app." : "¡Listo, " + datos.nombre.split(" ")[0] + "! Quedaste registrado. Te avisaremos apenas abramos la app.";
           form.reset();
+          // abre la ventana de gracias con el nombre de la persona
+          document.getElementById("graciasNombre").textContent = j.repetido ? "" : ", " + datos.nombre.split(" ")[0];
+          document.getElementById("gracias").hidden = false;
+          document.getElementById("graciasOk").focus();
         } catch (err) {
           msg.classList.add("is-bad"); msg.textContent = err.message;
         } finally { btn.disabled = false; }
