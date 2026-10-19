@@ -1096,6 +1096,12 @@
       .gracias__ok { margin-top: 0; }
       @keyframes gracias-in { from { opacity: 0; transform: translateY(20px) scale(0.92); } to { opacity: 1; transform: none; } }
     </style>
+    <style>
+      /* Botón del menú con el mismo estilo de "¡Quiero mis 5K millas!", en tamaño compacto */
+      .btn-millas--top { display: inline-block; width: auto; margin: 0; padding: 10px 22px; font-size: 1rem; line-height: 1.2; text-decoration: none; box-shadow: 0 0 0 2px var(--ink), 0 5px 0 2px #08e773, 0 10px 18px rgba(0, 0, 0, 0.25); }
+      .btn-millas--top:hover { color: var(--ink); }
+      .btn-millas--top:active { box-shadow: 0 0 0 2px var(--ink), 0 1px 0 2px #08e773; }
+    </style>
     <link rel="stylesheet" href="propuesta-3-movil.css" />
   </head>
   <body>
@@ -1109,7 +1115,7 @@
           <a href="#app">La app</a>
           <a href="#claro">Ahorro y cuotas</a>
           <a href="#unete">Operadores</a>
-          <a class="pill" href="#unete">Dame mis millas</a>
+          <a class="btn-millas btn-millas--top" href="#unete">Dame mis millas</a>
         </nav>
       </div>
     </header>
@@ -1129,8 +1135,6 @@
         <div class="wrap sky__in">
           <h1 class="big">Viatto <span class="pay">Pay</span><br />es otro viaje</h1>
           <p>Viatto es la app para ahorrar tu viaje a Cartagena, financiar lo que falta y reservar con el precio claro.</p>
-          <a class="pill" href="#unete">Dame mis millas</a>
-          <small>Muy pronto. Déjanos tu correo y te avisamos.</small>
         </div>
       </section>
 
